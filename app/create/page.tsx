@@ -67,9 +67,12 @@ export default async function CreatePage({
           >
             ← Back
           </Link>
-          <span className="text-xs tracking-[0.3em] uppercase text-foreground-subtle">
-            Create
-          </span>
+          <Link
+            href="/gallery"
+            className="text-xs tracking-[0.3em] uppercase text-foreground-muted transition-base hover:text-foreground"
+          >
+            Gallery →
+          </Link>
         </header>
 
         <div className="mb-12">

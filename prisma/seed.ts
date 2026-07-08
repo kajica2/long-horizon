@@ -440,6 +440,60 @@ async function seedSandTravelerArtworks() {
         hash: "deterministic-cold-moonscape-v1",
       },
     },
+    {
+      id: "visual-aurora",
+      title: "Aurora Borealis, Tromsø",
+      // Green-blue dominant, luminous, low-medium texture.
+      visualDNA: {
+        palette: ["#6ad0a0", "#1a3a6a", "#3a6a8a", "#0a1a30", "#9ae8c0"],
+        brightness: 0.42,
+        contrast: 0.48,
+        saturation: 0.55,
+        warmth: 0.42,
+        edgeDensity: 0.18,
+        textureComplexity: 0.22,
+        aspectRatio: 1.6,
+        compositionalCenter: { x: 0.5, y: 0.3 },
+        focalDistance: 0.48,
+        hash: "deterministic-aurora-v1",
+      },
+    },
+    {
+      id: "visual-bone",
+      title: "Bone Lithograph",
+      // Near-greyscale, very low saturation, high edge density (fine linework).
+      visualDNA: {
+        palette: ["#d8c8b0", "#18120c", "#a89070", "#2a2018", "#80684a"],
+        brightness: 0.55,
+        contrast: 0.72,
+        saturation: 0.15,
+        warmth: 0.55,
+        edgeDensity: 0.62,
+        textureComplexity: 0.42,
+        aspectRatio: 1.0,
+        compositionalCenter: { x: 0.5, y: 0.5 },
+        focalDistance: 0.22,
+        hash: "deterministic-bone-lithograph-v1",
+      },
+    },
+    {
+      id: "visual-moss",
+      title: "Moss on Slate",
+      // Mid-green dominant, earthy warmth, rich texture.
+      visualDNA: {
+        palette: ["#5a6a3a", "#1a2010", "#7a8a5a", "#2a3018", "#3a4a20"],
+        brightness: 0.45,
+        contrast: 0.38,
+        saturation: 0.42,
+        warmth: 0.45,
+        edgeDensity: 0.40,
+        textureComplexity: 0.72,
+        aspectRatio: 1.4,
+        compositionalCenter: { x: 0.5, y: 0.5 },
+        focalDistance: 0.35,
+        hash: "deterministic-moss-v1",
+      },
+    },
   ];
   for (const v of visualSeeds) {
     const seed = hashSeedForDemo(v.id);

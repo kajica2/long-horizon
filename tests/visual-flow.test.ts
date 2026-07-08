@@ -64,7 +64,7 @@ describe("VisualDNA → ShaderGraph bindings", () => {
     const dnaWarm = extractVisualDNAFromRGB(warm, 64, 64);
     const dc = visualBindingDelta(dnaCool);
     const dw = visualBindingDelta(dnaWarm);
-    expect(dw.bloom!).toBeGreaterThanOrEqual(dc.bloom! - 0.001);
+    expect(Number(dw.bloom)).toBeGreaterThanOrEqual(Number(dc.bloom) - 0.001);
   });
 
   it("suggested palette reflects dominant hue", () => {
@@ -100,8 +100,8 @@ describe("VisualDNA → ShaderGraph bindings", () => {
     const d = visualBindingDelta(dna);
     const json = JSON.stringify(d);
     const parsed = JSON.parse(json);
-    expect(parsed.noiseScale).toBeCloseTo(d.noiseScale!, 6);
-    expect(parsed.bloom).toBeCloseTo(d.bloom!, 6);
+    expect(parsed.noiseScale).toBeCloseTo(Number(d.noiseScale), 6);
+    expect(parsed.bloom).toBeCloseTo(Number(d.bloom), 6);
   });
 });
 
