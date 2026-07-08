@@ -1,0 +1,30 @@
+// BeatRender Genesis — Prisma schema
+// Source of truth: /workspace/beatrender-genesis-engine.md §2
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // SQLite for dev (file at prisma/dev.db). Swap to Postgres for prod —
+  // schema is compatible, only this block changes.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Artwork {
+  id            String   @id
+  seed          String
+  soundtrack    String   // canonical JSON: Soundtrack
+  audioDNA      String   // canonical JSON: AudioDNA
+  planetaryDNA  String?  // canonical JSON: PlanetaryDNA (optional — moment capture)
+  birthChart    String?  // canonical JSON: BirthChart (optional — personal chart)
+  birthLocation String?  // canonical JSON: BirthLocation (optional — alongside birthChart)
+  shaderGraph   String   // canonical JSON: ShaderGraph
+  createdAt     DateTime
+  creator       String
+  title         String?
+
+  @@index([creator])
+  @@index([createdAt])
+}
