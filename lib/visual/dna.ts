@@ -19,6 +19,15 @@
 import sharp from "sharp";
 import { canonicalJson, sha256Hex } from "@/lib/hash";
 import type { Palette5, VisualDNA } from "@/lib/types";
+import { paletteNameFromVisualDNA as _paletteNameFromVisualDNA } from "./palette-name";
+
+// Re-export the browser-safe helper for backwards compatibility
+// with everything that imported it from this file (incl. server-only callers).
+export const paletteNameFromVisualDNA = _paletteNameFromVisualDNA;
+// Add a hint for bundlers that everything else here is server-only
+// — dynamic imports from client components should work, but bundlers
+// are free to refuse static imports of this module from client components.
+void sharp;
 
 /** Resize target. 64×64 gives us 4096 pixels — enough for all features. */
 const TARGET_SIZE = 64;
@@ -514,39 +523,4 @@ function saturation(r: number, g: number, b: number): number {
 function rgbToHex(r: number, g: number, b: number): string {
   const c = (n: number) => n.toString(16).padStart(2, "0");
   return `#${c(r)}${c(g)}${c(b)}`;
-}
-
-/**
- * Map the dominant palette index to a known palette name from the engine.
- * Useful for binding visualDNA.palette into ShaderGraph.palette.
- *
- * Returns the most similar palette name based on hue family of the dominant.
- */
-export function paletteNameFromVisualDNA(dna: VisualDNA): import("@/lib/types").PaletteName {
-  // Pull the dominant colour
-  const hex = dna.palette[0]; // e.g. "#3a4b8a"
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const lum = (r + g + b) / 765;
-
-  // Warmth (R-B dominance)
-  const warmth = (r - b) / 255;
-
-  // Hue by which channel dominates
-  if (max === r && r > g && r > b) {
-    return warmth > 0.2 ? "ember" : "tide";
-  }
-  if (max === g) {
-    return "aurora";
-  }
-  if (max === b) {
-    return lum < 0.4 ? "ink" : "aurora";
-  }
-  // Greyscale / balanced
-  if (lum < 0.2) return "ink";
-  if (lum > 0.85) return "bone";
-  return warmth > 0 ? "ember" : "tide";
 }

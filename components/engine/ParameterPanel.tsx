@@ -270,6 +270,9 @@ export function ParameterPanel() {
         </div>
       </Accordion>
 
+      {/* Visual DNA accordion — only shown when the artwork carries one (action 13) */}
+      <VisualDNAGroup />
+
       {/* Reset all */}
       {!isMinimal && (
         <button
@@ -419,4 +422,91 @@ function formatNumber(v: number): string {
   if (Math.abs(v) >= 100) return v.toFixed(1);
   if (Math.abs(v) >= 1) return v.toFixed(2);
   return v.toFixed(3);
+}
+
+/**
+ * VisualDNAGroup — only renders if the loaded artwork carries a visualDNA
+ * (i.e. was generated from an image). Shows the 13 features + a master
+ * influence slider that scales the DNA-driven param deltas.
+ *
+ * The DNA is read-only (extracted once on the server). The user can
+ * scale how much of the DNA influences the engine with the influence
+ * slider, or revert the params to defaults via Reset.
+ */
+function VisualDNAGroup() {
+  const visualDNA = useEngineStore((s) => s.visualDNA);
+  const visualInfluence = useEngineStore((s) => s.visualInfluence);
+  const setVisualInfluence = useEngineStore((s) => s.setVisualInfluence);
+  const [open, setOpen] = useState(true);
+
+  if (!visualDNA) return null;
+
+  return (
+    <div className="rounded-lg border border-aurora-cyan/30 bg-aurora-cyan/5">
+      <div className="flex items-center justify-between px-3 py-2">
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex flex-1 items-center gap-2 text-left"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className={`h-3 w-3 text-aurora-cyan transition-transform ${open ? "rotate-90" : ""}`}
+            fill="none" stroke="currentColor" strokeWidth="2"
+          >
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+          <span className="text-[10px] tracking-[0.25em] uppercase text-aurora-cyan">Visual DNA</span>
+        </button>
+      </div>
+      {open && (
+        <div className="space-y-2.5 px-3 pb-3">
+          <div className="flex h-6 gap-0.5">
+            {visualDNA.palette.map((hex, i) => (
+              <div key={i} className="flex-1 rounded-sm" style={{ background: hex }} title={hex} />
+            ))}
+          </div>
+          <div className="text-[10px] text-foreground-subtle">
+            <span className="font-mono">{visualDNA.hash.slice(0, 16)}…</span>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px]">
+            <DnaBar label="Brightness" v={visualDNA.brightness} />
+            <DnaBar label="Contrast" v={visualDNA.contrast} />
+            <DnaBar label="Saturation" v={visualDNA.saturation} />
+            <DnaBar label="Warmth" v={visualDNA.warmth} />
+            <DnaBar label="Edges" v={visualDNA.edgeDensity} />
+            <DnaBar label="Texture" v={visualDNA.textureComplexity} />
+          </div>
+          <div className="border-t border-aurora-cyan/20 pt-2">
+            <div className="mb-1 flex justify-between text-[10px]">
+              <span className="text-foreground-muted">Influence</span>
+              <span className="font-mono text-aurora-cyan">{Math.round(visualInfluence * 100)}%</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={visualInfluence}
+              onChange={(e) => setVisualInfluence(Number(e.target.value))}
+              className="w-full accent-aurora-cyan"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DnaBar({ label, v }: { label: string; v: number }) {
+  return (
+    <div>
+      <div className="mb-0.5 flex justify-between text-foreground-subtle">
+        <span>{label}</span>
+        <span className="font-mono text-foreground-muted">{Math.round(v * 100)}%</span>
+      </div>
+      <div className="h-1 overflow-hidden rounded-full bg-background">
+        <div className="h-full bg-aurora-cyan/70" style={{ width: `${Math.round(v * 100)}%` }} />
+      </div>
+    </div>
+  );
 }

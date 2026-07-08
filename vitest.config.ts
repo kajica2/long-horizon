@@ -6,20 +6,16 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["tests/**/*.test.ts"],
-    // Tests share a single SQLite file (prisma/test.db). Run test files
-    // serially within a single worker to avoid lock contention.
+    // Tests share prisma/test.db (SQLite). Force SERIAL execution across
+    // test files to avoid lock contention. fileParallelism: false is the
+    // vitest 4 way (the older poolOptions.singleFork was removed).
     pool: "forks",
-    // @ts-expect-error — poolOptions isn't in the public InlineConfig type
-    // in vitest v4 but it does work at runtime (we use it to force singleFork
-    // for SQLite safety).
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    fileParallelism: false,
     sequence: {
       hooks: "list",
+      concurrent: false,
     },
+    maxConcurrency: 1,
   },
   resolve: {
     alias: {

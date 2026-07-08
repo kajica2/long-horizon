@@ -31,6 +31,7 @@
 | 11 | Browser compat | ✅ done | webglcontextlost / webglcontextrestored listener + MutationObserver re-attach, prefers-reduced-motion media query, Safari WebKit detection, print-mode hide, coarse-pointer :hover suppression |
 | 12 | v1 acceptance | ✅ done | 101/101 tests pass, typecheck clean, `next build` clean. **v1.0** shipped |
 | 13 | VisualDNA pipeline | ✅ done | `lib/visual/dna.ts` (sharp + k-means palette + Sobel edges + composition), `/api/visual/dna` POST endpoint, `lib/visual/bindings.ts` (DNA → ShaderGraph param deltas), Prisma migration `add_visual_dna`, engine store `setVisualDNA` action, 2 visual-driven seeds (sunset + moonscape). Tests 116/116. Stage 13/30 of Long Horizon roadmap. |
+| 14 | VisualDNA end-to-end | ✅ done | `/api/visual/create` POST endpoint (saves Artwork from VisualDNA + DNA-derived shaderGraph). `components/create/UploadPanel.tsx` — drag-drop upload, preview, palette + 6 feature bars, create button. `/create` page now: list audio + list visual + upload panel. `ParameterPanel` has Visual DNA accordion with palette + features + influence slider that scales the bound params live. `EngineView` loads visualDNA on artwork mount, applies bindings, shows palette + DNA in title strip. Browser/client safe helper split out into `lib/visual/palette-name.ts` (no sharp dep). Tests 123/123 (+7 visual-flow). |
 
 ---
 
@@ -140,4 +141,12 @@ You'll see 250k particles drifting through a curl-noise field with bloom + chrom
 
 - No audio reactivity yet (Stage 5) — bass/mid/treble uniforms are at 0
 - No mouse interactions (Stage 6) — camera is purely deterministic
-- No parameter panel UI (Stage 7) — shader graph p
+- No parameter panel UI (Stage 7) — shader graph params don't change live
+- No MP4 recording (Stage 8)
+- Reset uses a `key` prop rebuild — works but is heavier than needed
+
+**Performance expectations:**
+
+- 250k particles, 60Hz sim, 60fps render: achievable on 2020-era hardware with discrete GPU
+- Integrated GPUs: drop particle count to 100-150k via the parameter (Stage 7)
+- Mobile: not a v1 target; will revisit in Phase 2

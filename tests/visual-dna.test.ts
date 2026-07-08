@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll } from "vitest";
 import sharp from "sharp";
 import {
   extractVisualDNAFromRGB,
-  paletteNameFromVisualDNA,
 } from "@/lib/visual/dna";
+import { paletteNameFromVisualDNA } from "@/lib/visual/palette-name";
 import type { VisualDNA } from "@/lib/types";
 
 /**

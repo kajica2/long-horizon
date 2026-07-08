@@ -43,6 +43,7 @@ export function EngineView({ id }: { id: string }) {
   const setPlanetaryModulation = useEngineStore(
     (s) => s.setPlanetaryModulation,
   );
+  const setVisualDNA = useEngineStore((s) => s.setVisualDNA);
   const liveMode = useEngineStore((s) => s.liveMode);
   const setLiveMode = useEngineStore((s) => s.setLiveMode);
 
@@ -91,6 +92,12 @@ export function EngineView({ id }: { id: string }) {
               );
               setPlanetaryIntensity(a.planetaryDNA.chartIntensity);
               setPlanetaryMoonPhase(a.planetaryDNA.moonPhase);
+            }
+            if (a.visualDNA) {
+              const { visualBindingDelta } = await import("@/lib/visual/bindings");
+              const { paletteNameFromVisualDNA } = await import("@/lib/visual/palette-name");
+              const deltas = visualBindingDelta(a.visualDNA);
+              setVisualDNA(deltas, paletteNameFromVisualDNA(a.visualDNA), a.visualDNA);
             }
             // Auto-enable live mode only for audio-driven systems
             if (a.soundtrack?.url && !isBirthChart) {
@@ -148,6 +155,11 @@ export function EngineView({ id }: { id: string }) {
             {artwork.planetaryDNA && !artwork.birthChart && (
               <span className="ml-2 text-foreground-subtle">
                 · {artwork.planetaryDNA.dominantElement} dominant
+              </span>
+            )}
+            {artwork.visualDNA && (
+              <span className="ml-2 text-foreground-subtle">
+                · VisualDNA · {artwork.visualDNA.palette[0]}
               </span>
             )}
           </p>

@@ -17,7 +17,7 @@
  */
 
 import type { PaletteName, ShaderGraph, VisualDNA } from "@/lib/types";
-import { paletteNameFromVisualDNA } from "@/lib/visual/dna";
+import { paletteNameFromVisualDNA } from "@/lib/visual/palette-name";
 
 const BINDINGS = [
   { feature: "edgeDensity",       param: "noiseScale",           range: [0.3, 1.5] },

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listArtworks } from "@/lib/artwork-store";
 import type { Artwork } from "@/lib/types";
+import { UploadPanel } from "@/components/create/UploadPanel";
 
 /**
  * /create — entry point into the engine.
@@ -48,8 +49,9 @@ export default async function CreatePage({
     // DB not available
   }
 
-  const audio = artworks.filter((a) => !a.planetaryDNA && !a.birthChart);
+  const audio = artworks.filter((a) => !a.planetaryDNA && !a.birthChart && !a.visualDNA);
   const planetary = artworks.filter((a) => a.planetaryDNA && !a.birthChart);
+  const visual = artworks.filter((a) => a.visualDNA);
   const birthCharts = artworks.filter((a) => a.birthChart);
   const classics = artworks.filter(
     (a) => a.shaderGraph.system === "sandTraveler" || a.shaderGraph.system === "deJongAttractor",
@@ -134,13 +136,21 @@ export default async function CreatePage({
           </section>
         )}
 
-        <div className="mt-12 rounded-2xl border border-dashed border-border p-8 text-center">
-          <p className="mb-2 text-xs tracking-[0.3em] uppercase text-foreground-subtle">
-            Coming next
-          </p>
-          <p className="text-sm text-foreground-muted">
-            Upload your own MP3 · capture a planetary moment live · enter your own birth details
-          </p>
+        {visual.length > 0 && (
+          <section className="mb-12">
+            <h2 className="mb-4 text-xs tracking-[0.3em] uppercase text-foreground-subtle">
+              From image — VisualDNA
+            </h2>
+            <div className="grid gap-6 md:grid-cols-3">
+              {visual.map((artwork) => (
+                <ArtworkCard key={artwork.id} artwork={artwork} badge="visual" />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="mb-12">
+          <UploadPanel />
         </div>
       </div>
     </main>
@@ -152,7 +162,7 @@ function ArtworkCard({
   badge,
 }: {
   artwork: Artwork;
-  badge: "audio" | "planetary" | "birth" | "classic";
+  badge: "audio" | "planetary" | "birth" | "classic" | "visual";
 }) {
   let subtitle: string;
   let systemLabel: string;
@@ -162,6 +172,10 @@ function ArtworkCard({
   } else if (badge === "planetary" && artwork.planetaryDNA) {
     subtitle = `${artwork.planetaryDNA.dominantElement} dominant · ${artwork.planetaryDNA.aspectCount} aspects`;
     systemLabel = "filaments";
+  } else if (badge === "visual" && artwork.visualDNA) {
+    const dna = artwork.visualDNA;
+    subtitle = `${dna.palette[0]} ${dna.palette[1]} ${dna.palette[2]} · warmth ${(dna.warmth * 100).toFixed(0)}%`;
+    systemLabel = "particles";
   } else if (badge === "classic") {
     subtitle = "Tarbell 2004";
     systemLabel = artwork.shaderGraph.system === "sandTraveler" ? "sand" : "de Jong";
@@ -175,7 +189,15 @@ function ArtworkCard({
       href={`/engine/${artwork.id}`}
       className="group glass block overflow-hidden rounded-2xl transition-base hover:border-border-strong hover:bg-background-glass-hover"
     >
-      <div className="aspect-video bg-background-elevated" />
+      {artwork.visualDNA ? (
+        <div className="aspect-video bg-background-elevated flex">
+          {artwork.visualDNA.palette.map((hex, i) => (
+            <div key={i} className="flex-1" style={{ background: hex }} />
+          ))}
+        </div>
+      ) : (
+        <div className="aspect-video bg-background-elevated" />
+      )}
       <div className="p-5">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-xs tracking-[0.3em] uppercase text-foreground-subtle">

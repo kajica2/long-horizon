@@ -5,7 +5,7 @@
  */
 
 import { create } from "zustand";
-import type { ShaderGraph } from "../types";
+import type { ShaderGraph, VisualDNA } from "../types";
 
 export type EngineState = {
   paused: boolean;
@@ -20,6 +20,12 @@ export type EngineState = {
   // Planetary modulation (Stage 3a — passed to engines)
   planetaryChartIntensity: number;
   planetaryMoonPhase: number;
+
+  // Visual DNA (action 13 — image-driven genome)
+  visualDNA: VisualDNA | null;
+  visualInfluence: number; // [0, 1] master slider; scales the visual-DNA-driven deltas
+  visualBaselineParams: Record<string, number> | null; // params before DNA was applied
+  visualDeltaMagnitudes: Record<string, number> | null; // |param_after - baseline| per DNA-bound key
 
   // Live mode (Stage 5 — audio reactivity)
   liveMode: boolean;
@@ -37,7 +43,8 @@ export type EngineState = {
   setAudioModulation: (bass: number, mid: number, treble: number) => void;
   setAudioBands: (bass: number, mid: number, treble: number, onset: number) => void;
   setAudioBinding: (band: "bass" | "mid" | "treble" | "vocals", target: string) => void;
-  setVisualDNA: (deltas: Partial<ShaderGraph["params"]>, palette: ShaderGraph["palette"]) => void;
+  setVisualDNA: (deltas: Partial<ShaderGraph["params"]>, palette: ShaderGraph["palette"], dna?: VisualDNA | null) => void;
+  setVisualInfluence: (v: number) => void;
   resetParams: (group: "physics" | "visual" | "audio" | "all") => void;
   setPlanetaryModulation: (intensity: number, moonPhase: number) => void;
   setLiveMode: (on: boolean) => void;
@@ -79,6 +86,10 @@ export const useEngineStore = create<EngineState>((set) => ({
   audioOnset: 0,
   planetaryChartIntensity: 0.5,
   planetaryMoonPhase: 0.5,
+  visualDNA: null,
+  visualInfluence: 0.7,
+  visualBaselineParams: null,
+  visualDeltaMagnitudes: null,
   liveMode: false,
 
   setPaused: (paused) => set({ paused }),
@@ -98,14 +109,49 @@ export const useEngineStore = create<EngineState>((set) => ({
     set((s) => ({ shaderGraph: { ...s.shaderGraph, camera: mode } })),
   setAudioModulation: (bass, mid, treble) =>
     set({ audioBass: bass, audioMid: mid, audioTreble: treble }),
-  setVisualDNA: (deltas, palette) =>
-    set((s) => ({
-      shaderGraph: {
-        ...s.shaderGraph,
-        params: { ...s.shaderGraph.params, ...(deltas as Record<string, number | string | boolean>) },
-        palette,
-      },
-    })),
+  setVisualDNA: (deltas, palette, dna) =>
+    set((s) => {
+      const appliedDeltas = deltas as Record<string, number>;
+      // Snapshot the current param values BEFORE we override with the DNA.
+      // These are the "baseline" — the influence slider scales the deltas
+      // off this baseline rather than re-deriving each time.
+      const baseline: Record<string, number> = {};
+      const magnitudes: Record<string, number> = {};
+      for (const k of Object.keys(appliedDeltas)) {
+        const cur = s.shaderGraph.params[k];
+        const next = appliedDeltas[k];
+        if (typeof cur === "number") baseline[k] = cur;
+        if (typeof next === "number") magnitudes[k] = next - (typeof cur === "number" ? cur : next);
+      }
+      return {
+        shaderGraph: {
+          ...s.shaderGraph,
+          params: { ...s.shaderGraph.params, ...appliedDeltas },
+          palette,
+        },
+        visualDNA: dna ?? s.visualDNA,
+        visualBaselineParams: baseline,
+        visualDeltaMagnitudes: magnitudes,
+      };
+    }),
+  setVisualInfluence: (v) =>
+    set((s) => {
+      const baseline = s.visualBaselineParams;
+      const mags = s.visualDeltaMagnitudes;
+      if (!baseline || !mags) return { visualInfluence: v };
+      // Blend: param_at_influence = baseline + delta * influence
+      const blended: Record<string, number> = {};
+      for (const k of Object.keys(baseline)) {
+        blended[k] = baseline[k] + (mags[k] ?? 0) * v;
+      }
+      return {
+        visualInfluence: v,
+        shaderGraph: {
+          ...s.shaderGraph,
+          params: { ...s.shaderGraph.params, ...blended },
+        },
+      };
+    }),
   setAudioBands: (bass, mid, treble, onset) =>
     set({ audioBass: bass, audioMid: mid, audioTreble: treble, audioOnset: onset }),
   setAudioBinding: (band, target) =>
