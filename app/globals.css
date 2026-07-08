@@ -104,3 +104,63 @@ body {
     transition-duration: var(--transition-base) !important;
   }
 }
+
+/* — Mobile-first responsive: engine UI scaling — */
+/* Below 640px: parameter panel collapses to a button; recording
+   panel docks; engine controls shrink. */
+@media (max-width: 639px) {
+  .engine-controls {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  .engine-controls .panel {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  .engine-meta {
+    display: none; /* hide secondary metadata on phones */
+  }
+  .parameter-panel {
+    width: min(85vw, 320px);
+    right: 0.5rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    font-size: 0.85rem;
+  }
+  .recording-panel {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+}
+
+/* Tablet: maintain desktop layout but compress spacing */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .parameter-panel {
+    width: 320px;
+  }
+}
+
+/* Desktop and up: original layout */
+@media (min-width: 1024px) {
+  .parameter-panel {
+    width: 360px;
+  }
+}
+
+/* Coarse pointer (touch): no hover states getting stuck after tap */
+@media (pointer: coarse) {
+  .engine-panel-hover:hover {
+    background: var(--background-glass);
+  }
+}
+
+/* Print: hide the engine entirely, show just metadata */
+@media print {
+  .engine-canvas,
+  .engine-controls {
+    display: none !important;
+  }
+}

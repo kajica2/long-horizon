@@ -10,6 +10,13 @@ import { RecordingPanel } from "@/components/engine/RecordingPanel";
 import { useAudioPlayback } from "@/lib/audio/use-audio-playback";
 import { useEngineStore } from "@/lib/engine/store";
 import type { Artwork } from "@/lib/types";
+import {
+  deviceTierForWidth,
+  prefersReducedMotion,
+  type DeviceTier,
+} from "@/lib/engine/responsive";
+import { useGlContextRecovery } from "@/lib/engine/use-gl-context-recovery";
+import { useRef } from "react";
 
 /**
  * EngineView — client component that:
@@ -27,6 +34,10 @@ export function EngineView({ id }: { id: string }) {
   const [artwork, setArtwork] = useState<Artwork | null>(null);
   const [planetaryIntensity, setPlanetaryIntensity] = useState(0.5);
   const [planetaryMoonPhase, setPlanetaryMoonPhase] = useState(0.5);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  useGlContextRecovery(canvasContainerRef);
+  const [deviceTier, setDeviceTier] = useState<DeviceTier>("desktop");
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   const setShaderGraph = useEngineStore((s) => s.setShaderGraph);
   const setPlanetaryModulation = useEngineStore(
@@ -45,6 +56,22 @@ export function EngineView({ id }: { id: string }) {
   // Only show the player for non-birth-chart systems, and only when live mode is on
   const isBirthChart = artwork?.shaderGraph?.system === "birthChart";
   const showPlayer = liveMode && !!artwork?.soundtrack?.url && !isBirthChart;
+
+  useEffect(() => {
+    const updateTier = () => setDeviceTier(deviceTierForWidth(window.innerWidth));
+    updateTier();
+    window.addEventListener("resize", updateTier);
+    return () => window.removeEventListener("resize", updateTier);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,12 +123,14 @@ export function EngineView({ id }: { id: string }) {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-background">
-      <div key={resetKey} className="absolute inset-0">
+      <div key={resetKey} className="absolute inset-0" ref={canvasContainerRef}>
         <EngineCanvas
           seed={seed}
           planetaryChartIntensity={planetaryIntensity}
           planetaryMoonPhase={planetaryMoonPhase}
           birthChart={artwork?.birthChart}
+          deviceTier={deviceTier}
+          reducedMotion={reducedMotion}
         />
       </div>
       <ParameterPanel />

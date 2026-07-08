@@ -12,6 +12,7 @@ import { CameraRig } from "./CameraRig";
 import { PostFX } from "./PostFX";
 import { useEngineStore } from "@/lib/engine/store";
 import type { BirthChart } from "@/lib/types";
+import type { DeviceTier } from "@/lib/engine/responsive";
 
 /**
  * EngineCanvas — the R3F Canvas hosting all engine layers.
@@ -28,11 +29,15 @@ export function EngineCanvas({
   planetaryChartIntensity,
   planetaryMoonPhase,
   birthChart,
+  deviceTier,
+  reducedMotion,
 }: {
   seed: string;
   planetaryChartIntensity?: number;
   planetaryMoonPhase?: number;
   birthChart?: BirthChart;
+  deviceTier?: DeviceTier;
+  reducedMotion?: boolean;
 }) {
   const system = useEngineStore((s) => s.shaderGraph.system);
 
@@ -69,7 +74,7 @@ export function EngineCanvas({
             <BirthChartScene chart={birthChart} seed={seed} />
           ) : null
         ) : (
-          <ParticleSystem seed={seed} />
+          <ParticleSystem seed={seed} deviceTier={deviceTier} />
         )}
         {system !== "birthChart" && <CameraRig seed={seed} />}
         <PostFX />

@@ -10,6 +10,7 @@ import {
   PALETTES,
 } from "@/lib/engine/shaders/particle-render";
 import { useEngineStore } from "@/lib/engine/store";
+import { type DeviceTier, scaleForTier } from "@/lib/engine/responsive";
 
 /**
  * ParticleSystem — owns the GPGPU compute + render for Flow Field Meditation.
@@ -18,7 +19,7 @@ import { useEngineStore } from "@/lib/engine/store";
  * pass on a fixed simulation clock. Render reads from that texture and
  * draws additive points with age-based gradient coloring.
  */
-export function ParticleSystem({ seed }: { seed: string }) {
+export function ParticleSystem({ seed, deviceTier = "desktop" }: { seed: string; deviceTier?: DeviceTier }) {
   const { gl } = useThree();
   const engineRef = useRef<ParticleEngine | null>(null);
   const pointsRef = useRef<THREE.Points>(null);
@@ -34,7 +35,8 @@ export function ParticleSystem({ seed }: { seed: string }) {
 
   // Initialize engine once
   useEffect(() => {
-    const count = Number(shaderGraph.params.particleCount) || 250_000;
+    const baseCount = Number(shaderGraph.params.particleCount) || 250_000;
+    const count = Math.floor(baseCount * scaleForTier(deviceTier));
     const engine = new ParticleEngine(gl, {
       seed,
       particleCount: count,
