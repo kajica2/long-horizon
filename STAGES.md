@@ -27,12 +27,10 @@
 | 7 | Parameter panel | ✅ done | Right-rail accordion UI; sliders + numeric inputs; 2x2 audio bindings grid; per-group reset; 5 tests |
 | 8 | MP4 recording | ✅ done | Polaroid PNG (canvas.toBlob) + WebM 5s video (MediaRecorder); uploads to /public/captures/; 2 tests |
 | 9 | Shareable page | ✅ done | /a/[id] public route, no chrome, live engine + metadata strip + Remix action; 3 tests |
-| 7 | User interactions | ⏸ | Mouse / scroll / click |
-| 7 | Parameter panel | ⏸ | UI sliders bound to shader graph |
-| 8 | MP4 recording | ⏸ | MediaRecorder integration |
-| 9 | Save + shareable link | ⏸ | POST Artwork → self-contained /a/[id] |
-| 10 | Landing page installation | ⏸ | Flow Field on `/` |
-| 11 | Polish + v1 acceptance | ⏸ | All 7 acceptance criteria pass |
+| 10 | Mobile + responsive | ✅ done | `lib/engine/responsive.ts` (device tier + count scaling + tick rate cap), useGlContextRecovery hook, engine UI media queries (≤639 / 640–1023 / ≥1024), 13 responsive tests, total 101/101 |
+| 11 | Browser compat | ✅ done | webglcontextlost / webglcontextrestored listener + MutationObserver re-attach, prefers-reduced-motion media query, Safari WebKit detection, print-mode hide, coarse-pointer :hover suppression |
+| 12 | v1 acceptance | ✅ done | 101/101 tests pass, typecheck clean, `next build` clean. **v1.0** shipped |
+| 13 | VisualDNA pipeline | ✅ done | `lib/visual/dna.ts` (sharp + k-means palette + Sobel edges + composition), `/api/visual/dna` POST endpoint, `lib/visual/bindings.ts` (DNA → ShaderGraph param deltas), Prisma migration `add_visual_dna`, engine store `setVisualDNA` action, 2 visual-driven seeds (sunset + moonscape). Tests 116/116. Stage 13/30 of Long Horizon roadmap. |
 
 ---
 
@@ -142,12 +140,4 @@ You'll see 250k particles drifting through a curl-noise field with bloom + chrom
 
 - No audio reactivity yet (Stage 5) — bass/mid/treble uniforms are at 0
 - No mouse interactions (Stage 6) — camera is purely deterministic
-- No parameter panel UI (Stage 7) — shader graph params don't change live
-- No MP4 recording (Stage 8)
-- Reset uses a `key` prop rebuild — works but is heavier than needed
-
-**Performance expectations:**
-
-- 250k particles, 60Hz sim, 60fps render: achievable on 2020-era hardware with discrete GPU
-- Integrated GPUs: drop particle count to 100-150k via the parameter (Stage 7)
-- Mobile: not a v1 target; will revisit in Phase 2
+- No parameter panel UI (Stage 7) — shader graph p

@@ -55,6 +55,49 @@ export type AudioDNA = {
 };
 
 // ============================================================
+// VisualDNA — the image-driven genome
+// ============================================================
+
+/**
+ * A 5-colour palette extracted from the source image, in #rrggbb form.
+ * Palette[0] is the dominant colour; later entries are accent colours.
+ */
+export type Palette5 = [string, string, string, string, string];
+
+/**
+ * VisualDNA — the genome derived from a static image. Like AudioDNA but
+ * for pixels. Drives the same ShaderGraph engine with different bindings:
+ *   - palette[0..4]      → engine palette
+ *   - edgeDensity        → noiseScale    (more edges → finer noise)
+ *   - textureComplexity  → fieldStrength (more texture → stronger field)
+ *   - warmth             → cameraMode + bloomBias
+ *   - compositionalCenter → driftOrigin offset
+ *   - aspectRatio        → camera FOV auto-adjust
+ */
+export type VisualDNA = {
+  // The dominant 5-colour palette
+  palette: Palette5;
+
+  // Photometric features, all [0, 1]
+  brightness: number;    // mean luminance
+  contrast: number;      // luminance standard deviation / mean
+  saturation: number;    // mean HSL saturation
+  warmth: number;        // mean (R - B) / 255
+
+  // Structural features, all [0, 1]
+  edgeDensity: number;   // 1.0 - normalised count of Sobel edges
+  textureComplexity: number;  // mean local variance of 8x8 blocks
+
+  // Composition
+  aspectRatio: number;   // width / height, normalised to [0.5, 2.0] range
+  compositionalCenter: { x: number; y: number }; // [0, 1] each
+  focalDistance: number; // [0, 1] mean distance of high-saturation pixels from centre
+
+  // Cached for reproducibility
+  hash: string;
+};
+
+// ============================================================
 // ShaderGraph — the procedural recipe
 // ============================================================
 
@@ -209,6 +252,7 @@ export type Artwork = {
   seed: Seed;
   soundtrack: Soundtrack;
   audioDNA: AudioDNA;
+  visualDNA?: VisualDNA;         // present when the genome is image-driven
   planetaryDNA?: PlanetaryDNA;   // present when the genome is planetary (a moment)
   birthChart?: BirthChart;       // present when the genome is a personal birth chart
   birthLocation?: BirthLocation; // present alongside birthChart

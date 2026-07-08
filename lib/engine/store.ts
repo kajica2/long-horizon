@@ -37,6 +37,7 @@ export type EngineState = {
   setAudioModulation: (bass: number, mid: number, treble: number) => void;
   setAudioBands: (bass: number, mid: number, treble: number, onset: number) => void;
   setAudioBinding: (band: "bass" | "mid" | "treble" | "vocals", target: string) => void;
+  setVisualDNA: (deltas: Partial<ShaderGraph["params"]>, palette: ShaderGraph["palette"]) => void;
   resetParams: (group: "physics" | "visual" | "audio" | "all") => void;
   setPlanetaryModulation: (intensity: number, moonPhase: number) => void;
   setLiveMode: (on: boolean) => void;
@@ -97,6 +98,14 @@ export const useEngineStore = create<EngineState>((set) => ({
     set((s) => ({ shaderGraph: { ...s.shaderGraph, camera: mode } })),
   setAudioModulation: (bass, mid, treble) =>
     set({ audioBass: bass, audioMid: mid, audioTreble: treble }),
+  setVisualDNA: (deltas, palette) =>
+    set((s) => ({
+      shaderGraph: {
+        ...s.shaderGraph,
+        params: { ...s.shaderGraph.params, ...(deltas as Record<string, number | string | boolean>) },
+        palette,
+      },
+    })),
   setAudioBands: (bass, mid, treble, onset) =>
     set({ audioBass: bass, audioMid: mid, audioTreble: treble, audioOnset: onset }),
   setAudioBinding: (band, target) =>

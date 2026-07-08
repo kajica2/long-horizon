@@ -17,6 +17,7 @@ model Artwork {
   seed          String
   soundtrack    String   // canonical JSON: Soundtrack
   audioDNA      String   // canonical JSON: AudioDNA
+  visualDNA     String?  // canonical JSON: VisualDNA (optional — image-driven genome, action 13)
   planetaryDNA  String?  // canonical JSON: PlanetaryDNA (optional — moment capture)
   birthChart    String?  // canonical JSON: BirthChart (optional — personal chart)
   birthLocation String?  // canonical JSON: BirthLocation (optional — alongside birthChart)

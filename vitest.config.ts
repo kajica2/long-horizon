@@ -9,6 +9,9 @@ export default defineConfig({
     // Tests share a single SQLite file (prisma/test.db). Run test files
     // serially within a single worker to avoid lock contention.
     pool: "forks",
+    // @ts-expect-error — poolOptions isn't in the public InlineConfig type
+    // in vitest v4 but it does work at runtime (we use it to force singleFork
+    // for SQLite safety).
     poolOptions: {
       forks: {
         singleFork: true,

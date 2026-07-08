@@ -22,6 +22,9 @@ import {
 import { generateSeed, mulberry32 } from "../lib/seed";
 import { extractAudioDNA } from "../lib/audio/extract-dna";
 import { computePlanetaryDNA } from "../lib/planetary/compute";
+import { paletteNameFromVisualDNA } from "../lib/visual/dna";
+import { visualBindingDelta } from "../lib/visual/bindings";
+import type { VisualDNA } from "../lib/types";
 
 // ============================================================
 // Minimal WAV file generator (mono, 16-bit PCM)
@@ -392,7 +395,125 @@ async function seedSandTravelerArtworks() {
     await saveArtwork(artwork);
     console.log(`  ${dj.id} — ${dj.title}`);
   }
+
+  // --- Visual-driven seeds (action 13) -----------------------------
+  // We don't bake an actual image — we synthesise a representative VisualDNA
+  // for two stylised source images (warm sunset, cold moonscape). Real users
+  // will upload their own image and hit /api/visual/dna.
+  await prisma.artwork.deleteMany({ where: { id: { startsWith: "visual-" } } });
+  const visualSeeds: Array<{ id: string; title: string; visualDNA: VisualDNA }> = [
+    {
+      id: "visual-warm-sunset",
+      title: "Sunset over Weiti Creek",
+      // Warm-dominant image: reds / oranges, mid brightness, high warmth,
+      // moderate edge density, low texture complexity.
+      visualDNA: {
+        palette: ["#ff8a4a", "#9a3819", "#3a1a0a", "#fcb072", "#b2866a"],
+        brightness: 0.65,
+        contrast: 0.55,
+        saturation: 0.78,
+        warmth: 0.82,
+        edgeDensity: 0.25,
+        textureComplexity: 0.30,
+        aspectRatio: 1.5,
+        compositionalCenter: { x: 0.48, y: 0.62 },
+        focalDistance: 0.42,
+        hash: "deterministic-warm-sunset-v1",
+      },
+    },
+    {
+      id: "visual-cold-moonscape",
+      title: "Highland Moonscape",
+      // Cool-dominant image: blues / greys, low brightness, low warmth,
+      // high edge density (sharp ridges), moderate texture.
+      visualDNA: {
+        palette: ["#3a4a8a", "#0a0d2a", "#7080a0", "#101020", "#aab0c0"],
+        brightness: 0.28,
+        contrast: 0.62,
+        saturation: 0.30,
+        warmth: 0.18,
+        edgeDensity: 0.55,
+        textureComplexity: 0.55,
+        aspectRatio: 1.78,
+        compositionalCenter: { x: 0.5, y: 0.45 },
+        focalDistance: 0.32,
+        hash: "deterministic-cold-moonscape-v1",
+      },
+    },
+  ];
+  for (const v of visualSeeds) {
+    const seed = hashSeedForDemo(v.id);
+    const shaderGraph = defaultShaderGraph();
+    // Inject the visual-DNA-informed param deltas
+    const deltas = visualBindings(v.visualDNA);
+    shaderGraph.params = {
+      ...shaderGraph.params,
+      ...deltas,
+    };
+    shaderGraph.palette = palFromVisual(v.visualDNA);
+    const artwork: Artwork = {
+      id: v.id,
+      seed,
+      soundtrack: emptySoundtrack(),
+      audioDNA: zeroAudioDNA(),
+      visualDNA: v.visualDNA,
+      shaderGraph,
+      createdAt: new Date().toISOString(),
+      creator: "visual-seed",
+      title: v.title,
+    };
+    await saveArtwork(artwork);
+    console.log(`  ${v.id} — ${v.title}`);
+  }
 }
+
+// Helpers for visual-DNA-driven seeds (action 13)
+function visualBindings(dna: VisualDNA): Record<string, number> {
+  return visualBindingDelta(dna) as Record<string, number>;
+}
+function palFromVisual(dna: VisualDNA) {
+  return paletteNameFromVisualDNA(dna);
+}
+function emptySoundtrack(): Soundtrack {
+  // Image-driven seeds have no audio; the engine still needs a placeholder Soundtrack.
+  return {
+    id: "none",
+    hash: "0000000000000000000000000000000000000000000000000000000000000000",
+    originalFilename: "",
+    duration: 0,
+    uploadedAt: new Date().toISOString(),
+    url: "",
+  };
+}
+function zeroAudioDNA(): import("../lib/types").AudioDNA {
+  return {
+    tempo: 0,
+    key: "C",
+    mode: "major" as const,
+    brightness: 0,
+    warmth: 0,
+    texture: 0,
+    energy: 0,
+    aggression: 0,
+    complexity: 0,
+    motion: 0,
+    entropy: 0,
+  };
+}
+const _visual_dummy: VisualDNA = {
+  palette: ["#000000", "#000000", "#000000", "#000000", "#000000"],
+  brightness: 0,
+  contrast: 0,
+  saturation: 0,
+  warmth: 0,
+  edgeDensity: 0,
+  textureComplexity: 0,
+  aspectRatio: 1,
+  compositionalCenter: { x: 0.5, y: 0.5 },
+  focalDistance: 0,
+  hash: "",
+};
+void _visual_dummy;
 
 // Deterministic seed for each demo so re-running seed gives the same Artwork.
 function hashSeedForDemo(input: string): string {

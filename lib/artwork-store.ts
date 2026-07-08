@@ -15,6 +15,7 @@ import {
   type Artwork,
   type Soundtrack,
   type AudioDNA,
+  type VisualDNA,
   type PlanetaryDNA,
   type BirthChart,
   type BirthLocation,
@@ -27,6 +28,7 @@ function rowToArtwork(row: {
   seed: string;
   soundtrack: string;
   audioDNA: string;
+  visualDNA: string | null;
   planetaryDNA: string | null;
   birthChart: string | null;
   birthLocation: string | null;
@@ -40,6 +42,9 @@ function rowToArtwork(row: {
     seed: row.seed,
     soundtrack: JSON.parse(row.soundtrack) as Soundtrack,
     audioDNA: JSON.parse(row.audioDNA) as AudioDNA,
+    visualDNA: row.visualDNA
+      ? (JSON.parse(row.visualDNA) as VisualDNA)
+      : undefined,
     planetaryDNA: row.planetaryDNA
       ? (JSON.parse(row.planetaryDNA) as PlanetaryDNA)
       : undefined,
@@ -64,6 +69,9 @@ export async function saveArtwork(artwork: Artwork): Promise<void> {
       seed: artwork.seed,
       soundtrack: canonicalJson(artwork.soundtrack),
       audioDNA: canonicalJson(artwork.audioDNA),
+      visualDNA: artwork.visualDNA
+        ? canonicalJson(artwork.visualDNA)
+        : null,
       planetaryDNA: artwork.planetaryDNA
         ? canonicalJson(artwork.planetaryDNA)
         : null,
@@ -82,6 +90,9 @@ export async function saveArtwork(artwork: Artwork): Promise<void> {
       seed: artwork.seed,
       soundtrack: canonicalJson(artwork.soundtrack),
       audioDNA: canonicalJson(artwork.audioDNA),
+      visualDNA: artwork.visualDNA
+        ? canonicalJson(artwork.visualDNA)
+        : null,
       planetaryDNA: artwork.planetaryDNA
         ? canonicalJson(artwork.planetaryDNA)
         : null,
