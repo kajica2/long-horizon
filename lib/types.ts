@@ -260,6 +260,10 @@ export type Artwork = {
   createdAt: string; // ISO 8601
   creator: string; // user id or anonymous session id
   title?: string;
+
+  // Remix chain (action 20) — lineage of forks.
+  // parentId points at the artwork this was forked from. unset for originals.
+  parentId?: ArtworkId;
 };
 
 // ============================================================

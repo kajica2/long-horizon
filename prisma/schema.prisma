@@ -25,7 +25,23 @@ model Artwork {
   createdAt     DateTime
   creator       String
   title         String?
+  parentId      String?  // canonical JSON: remix chain (action 20)
+
+  comments      Comment[]
 
   @@index([creator])
   @@index([createdAt])
+  @@index([parentId])
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  artworkId  String
+  body       String
+  author     String   // user id / "anonymous" / session-id
+  createdAt  DateTime @default(now())
+
+  artwork    Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@index([artworkId, createdAt])
 }

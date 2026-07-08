@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listArtworks } from "@/lib/artwork-store";
 import type { Artwork } from "@/lib/types";
 import { UploadPanel } from "@/components/create/UploadPanel";
+import { WebcamCapture } from "@/components/create/WebcamCapture";
 
 /**
  * /create — entry point into the engine.
@@ -32,6 +33,8 @@ export default async function CreatePage({
           createdAt: new Date().toISOString(),
           creator: "anonymous",
           title: `Remix of ${src.title ?? src.id}`,
+          // Action 20: remix chain ancestry — set parentId so /a/[id] can walk the chain
+          parentId: src.id,
         });
         // Redirect to the new engine
         const { redirect } = await import("next/navigation");
@@ -154,6 +157,10 @@ export default async function CreatePage({
 
         <div className="mb-12">
           <UploadPanel />
+        </div>
+
+        <div className="mb-12">
+          <WebcamCapture />
         </div>
       </div>
     </main>

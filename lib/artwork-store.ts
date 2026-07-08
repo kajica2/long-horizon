@@ -36,6 +36,7 @@ function rowToArtwork(row: {
   createdAt: Date;
   creator: string;
   title: string | null;
+  parentId: string | null;
 }): Artwork {
   return {
     id: row.id,
@@ -58,6 +59,7 @@ function rowToArtwork(row: {
     createdAt: row.createdAt.toISOString(),
     creator: row.creator,
     title: row.title ?? undefined,
+    parentId: row.parentId ?? undefined,
   };
 }
 
@@ -85,6 +87,7 @@ export async function saveArtwork(artwork: Artwork): Promise<void> {
       createdAt: new Date(artwork.createdAt),
       creator: artwork.creator,
       title: artwork.title ?? null,
+      parentId: artwork.parentId ?? null,
     },
     update: {
       seed: artwork.seed,
@@ -104,6 +107,7 @@ export async function saveArtwork(artwork: Artwork): Promise<void> {
         : null,
       shaderGraph: canonicalJson(artwork.shaderGraph),
       title: artwork.title ?? null,
+      parentId: artwork.parentId ?? null,
     },
   });
 }
@@ -136,4 +140,25 @@ export async function deleteArtwork(id: string): Promise<boolean> {
 
 export async function countArtworks(): Promise<number> {
   return prisma.artwork.count();
+}
+
+/**
+ * Walk the remix chain backward from a given artwork id.
+ *
+ * Returns most-recent-first: [self, parent, grandparent, ...].
+ * Stops at a missing parent (chain origin) or a cycle (defensive).
+ *
+ * Used by /a/[id] to show the remix lineage below the hero.
+ */
+export async function getRemixChain(artworkId: string, maxDepth = 6): Promise<Artwork[]> {
+  const out: Artwork[] = [];
+  const seen = new Set<string>();
+  let current: Artwork | null = await getArtwork(artworkId);
+  while (current && !seen.has(current.id) && out.length < maxDepth) {
+    out.push(current);
+    seen.add(current.id);
+    if (!current.parentId) break;
+    current = await getArtwork(current.parentId);
+  }
+  return out;
 }

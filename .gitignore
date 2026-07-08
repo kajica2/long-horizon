@@ -78,6 +78,8 @@ build/
 *.log
 *.tar.gz
 tmp/
+test-results/
+playwright-report/
 
 # Prisma test DB and any dev/test DBs anywhere in prisma/
 /prisma/**/*.db

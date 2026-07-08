@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BeatRender Genesis — creates living artworks",
+  title: "Long Horizon — creates living artworks",
   description:
-    "BeatRender Genesis transforms music into evolving computational artworks. Each render is a unique, deterministic digital organism grown from sound.",
+    "Long Horizon transforms music into evolving computational artworks. Each render is a unique, deterministic digital organism grown from sound.",
 };
 
 export const viewport: Viewport = {

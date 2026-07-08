@@ -13,7 +13,8 @@
 
 import Link from "next/link";
 import { headers } from "next/headers";
-import { getArtwork, listArtworks } from "@/lib/artwork-store";
+import { getArtwork, listArtworks, getRemixChain } from "@/lib/artwork-store";
+import { CommentThread } from "@/components/share/CommentThread";
 import { artworkHash } from "@/lib/hash";
 import { ShareableViewer } from "@/components/engine/ShareableViewer";
 import type { Artwork } from "@/lib/types";
@@ -32,6 +33,7 @@ export default async function ShareableArtworkPage({
 
   const allArtworks = await listArtworks({ limit: 50 }).catch(() => [] as Artwork[]);
   const related = pickRelated(artwork, allArtworks);
+  const remixChain = await getRemixChain(artwork.id).catch(() => [] as Artwork[]);
 
   const hash = artworkHash(artwork);
   const isAudio = !!artwork.soundtrack?.url && artwork.soundtrack.url !== "";
@@ -164,6 +166,45 @@ export default async function ShareableArtworkPage({
         </div>
       </section>
 
+      {/* 4b. Remix chain (action 20) — lineage breadcrumb */}
+      {remixChain.length > 1 && (
+        <section className="bg-background px-5 py-10 md:px-12">
+          <div className="mx-auto max-w-5xl">
+            <p className="mb-4 text-[11px] tracking-[0.3em] uppercase text-foreground-subtle">
+              Remix lineage
+            </p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+              {remixChain.map((a, i) => (
+                <span key={a.id} className="flex items-center gap-2">
+                  {i > 0 && (
+                    <span className="text-foreground-subtle">←</span>
+                  )}
+                  <Link
+                    href={`/a/${a.id}`}
+                    className={
+                      "rounded-md border px-2.5 py-1 transition-base " +
+                      (i === 0
+                        ? "border-aurora-cyan/40 bg-aurora-cyan/10 text-aurora-cyan"
+                        : "border-border bg-background-elevated/60 text-foreground-muted hover:border-border-strong hover:text-foreground")
+                    }
+                  >
+                    <span className="font-mono text-[10px]">
+                      {a.id.slice(0, 18)}…
+                    </span>
+                    {i > 0 && a.title && (
+                      <span className="ml-2 text-[11px]">{a.title}</span>
+                    )}
+                  </Link>
+                </span>
+              ))}
+              <span className="ml-2 font-mono text-[10px] text-foreground-subtle">
+                depth {remixChain.length - 1}
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* 4. Related artworks */}
       {related.length > 0 && (
         <section className="bg-background-secondary px-5 py-12 md:px-12 md:py-20">
@@ -199,7 +240,18 @@ export default async function ShareableArtworkPage({
         </section>
       )}
 
-      {/* 5. Footer */}
+      {/* 5. Comments (action 21) */}
+      <section className="bg-background px-5 py-12 md:px-12 md:py-16">
+        <div className="mx-auto max-w-3xl">
+          <p className="mb-1 text-[11px] tracking-[0.3em] uppercase text-foreground-subtle">
+            Field notes
+          </p>
+          <h2 className="mb-6 text-2xl font-light">Comments</h2>
+          <CommentThread artworkId={artwork.id} />
+        </div>
+      </section>
+
+      {/* 6. Footer */}
       <footer className="border-t border-border bg-background px-5 py-8 md:px-12">
         <div className="mx-auto flex max-w-5xl items-center justify-between text-[10px] tracking-[0.2em] uppercase text-foreground-subtle">
           <Link href="/" className="transition-base hover:text-foreground">
