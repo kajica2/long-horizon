@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Artwork } from "@/lib/types";
 
@@ -40,6 +41,10 @@ export function ArtworkTile({
   systemDescription: string;
 }) {
   const palette = (artwork.visualDNA?.palette ?? PALETTES[artwork.shaderGraph.palette] ?? PALETTES.aurora).slice(0, 5);
+  const system = artwork.shaderGraph.system;
+
+  const systemGlyphNode = renderSystemGlyph(system, systemLabel, systemDescription);
+  const showSystemGlyph = systemGlyphNode !== null;
 
   return (
     <Link
@@ -48,7 +53,9 @@ export function ArtworkTile({
       className="group block overflow-hidden rounded-2xl border border-border bg-background-elevated transition-base hover:border-border-strong hover:bg-background-glass-hover hover:-translate-y-0.5"
     >
       <div className="aspect-[4/3] w-full overflow-hidden">
-        {source === "visual" ? (
+        {showSystemGlyph ? (
+          systemGlyphNode
+        ) : source === "visual" ? (
           <PaletteSwatch colors={palette} />
         ) : source === "audio" ? (
           <AudioGlyph tempo={artwork.audioDNA.tempo} keyName={artwork.audioDNA.key} />
@@ -195,5 +202,173 @@ function SystemGlyph({ label, description, palette }: { label: string; descripti
         ))}
       </div>
     </div>
+  );
+}
+
+/**
+ * Per-system glyphs. Returned as a self-contained tile content (it owns the
+ * background so the tile stays consistent with the other thumbnails).
+ *
+ * Returns null for systems that don't have a bespoke glyph — callers fall
+ * back to the source-based branches.
+ */
+function renderSystemGlyph(
+  system: Artwork["shaderGraph"]["system"],
+  label: string,
+  description: string,
+): ReactNode {
+  switch (system) {
+    case "reactionDiffusion":
+      return <ReactionDiffusionGlyph label={label} description={description} />;
+    case "lorenzAttractor":
+      return <LorenzAttractorGlyph label={label} description={description} />;
+    case "physarum":
+      return <PhysarumGlyph label={label} description={description} />;
+    default:
+      return null;
+  }
+}
+
+function GlyphFrame({ label, description, children }: { label: string; description: string; children: ReactNode }) {
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center bg-background p-4 text-center">
+      <div className="flex h-full w-full items-center justify-center">{children}</div>
+      <p className="mt-2 font-light text-foreground text-base leading-tight">{label}</p>
+      <p className="text-[10px] text-foreground-muted leading-tight">{description}</p>
+    </div>
+  );
+}
+
+/**
+ * ReactionDiffusionGlyph — a 4×4 dot lattice with 3 spots scaled up to evoke
+ * Gray-Scott Turing spots emerging from a homogeneous field.
+ */
+function ReactionDiffusionGlyph({ label, description }: { label: string; description: string }) {
+  const cols = 4;
+  const rows = 4;
+  const step = 18;
+  const originX = -((cols - 1) * step) / 2;
+  const originY = -((rows - 1) * step) / 2;
+  // (col, row) → scale: most dots are baseline (1); a cluster grows to 2.2 and 1.7.
+  const emphasized = new Set([
+    "1,1",
+    "2,2",
+    "0,3",
+  ]);
+  return (
+    <GlyphFrame label={label} description={description}>
+      <svg viewBox="-50 -50 100 100" className="h-full max-h-[70%] w-full max-w-[70%]" aria-hidden="true">
+        <defs>
+          <radialGradient id="rd-spot" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fde047" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
+          </radialGradient>
+        </defs>
+        {Array.from({ length: rows }).flatMap((_, r) =>
+          Array.from({ length: cols }).map((__, c) => {
+            const cx = originX + c * step;
+            const cy = originY + r * step;
+            const key = `${c},${r}`;
+            const size = emphasized.has(key) ? 3.2 : 1.1;
+            const fill = emphasized.has(key) ? "url(#rd-spot)" : "#7c3aed";
+            const opacity = emphasized.has(key) ? 1 : 0.55;
+            return (
+              <circle
+                key={`${c}-${r}`}
+                cx={cx}
+                cy={cy}
+                r={size}
+                fill={fill}
+                opacity={opacity}
+              />
+            );
+          }),
+        )}
+      </svg>
+    </GlyphFrame>
+  );
+}
+
+/**
+ * LorenzAttractorGlyph — a single closed bezier that traces the iconic
+ * two-lobe butterfly silhouette of the Lorenz strange attractor.
+ */
+function LorenzAttractorGlyph({ label, description }: { label: string; description: string }) {
+  // Drawn to read as butterfly lobes (left lobe lower-down, right lobe higher-up)
+  // with a crossing in the middle — the signature look of the Lorenz projection.
+  return (
+    <GlyphFrame label={label} description={description}>
+      <svg viewBox="-50 -50 100 100" className="h-full max-h-[75%] w-full max-w-[80%]" aria-hidden="true">
+        <path
+          d="M -38 20
+             C -28 -22, -2 -32, -2 0
+             C -2 28, -22 36, -2 38
+             C 22 40, 38 14, 32 6
+             C 26 -10, 8 -8, 2 6
+             C -2 14, -8 18, -16 22
+             C -28 26, -38 26, -38 20 Z"
+          fill="none"
+          stroke="#06b6d4"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity="0.9"
+        />
+        <path
+          d="M -38 20
+             C -28 -22, -2 -32, -2 0
+             C -2 28, -22 36, -2 38
+             C 22 40, 38 14, 32 6
+             C 26 -10, 8 -8, 2 6
+             C -2 14, -8 18, -16 22
+             C -28 26, -38 26, -38 20 Z"
+          fill="none"
+          stroke="rgba(255,255,255,0.18)"
+          strokeWidth="0.5"
+        />
+        <circle cx="-22" cy="2" r="1.4" fill="#06b6d4" />
+        <circle cx="18" cy="22" r="1.4" fill="#06b6d4" />
+      </svg>
+    </GlyphFrame>
+  );
+}
+
+/**
+ * PhysarumGlyph — a small network of branching lines converging toward a
+ * central node, evoking agent-based slime mold vein formation.
+ */
+function PhysarumGlyph({ label, description }: { label: string; description: string }) {
+  // Branches start at the edges and meet near the center; slight curves
+  // evoke the wandering look of physarum agents leaving trails.
+  const branches: Array<Array<[number, number]>> = [
+    [[-44, -32], [-22, -16], [-6, -4]],
+    [[-44, 12], [-18, 6], [-4, -2]],
+    [[38, -32], [18, -14], [4, -2]],
+    [[40, 18], [16, 8], [4, 2]],
+    [[-30, 38], [-12, 14], [2, 4]],
+    [[26, 40], [10, 14], [2, 2]],
+  ];
+  const pathD = (pts: Array<[number, number]>) =>
+    pts
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${p[0]} ${p[1]}`)
+      .join(" ");
+  return (
+    <GlyphFrame label={label} description={description}>
+      <svg viewBox="-50 -50 100 100" className="h-full max-h-[80%] w-full max-w-[85%]" aria-hidden="true">
+        {branches.map((pts, i) => (
+          <path
+            key={i}
+            d={pathD(pts)}
+            fill="none"
+            stroke={i % 2 === 0 ? "#65a30d" : "#bef264"}
+            strokeWidth={i % 3 === 0 ? 1.6 : 0.9}
+            strokeLinecap="round"
+            opacity={0.7 + (i % 3) * 0.1}
+          />
+        ))}
+        <circle cx="0" cy="0" r="3.6" fill="#bef264" opacity="0.95" />
+        <circle cx="0" cy="0" r="6" fill="none" stroke="#bef264" strokeWidth="0.6" opacity="0.4" />
+      </svg>
+    </GlyphFrame>
   );
 }
