@@ -20,6 +20,7 @@ import { HeartButton } from "@/components/share/HeartButton";
 import { getReactionSummary } from "@/lib/reaction-store";
 import { artworkHash } from "@/lib/hash";
 import { ShareableViewer } from "@/components/engine/ShareableViewer";
+import { similarArtworks } from "@/lib/discovery";
 import type { Artwork } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -220,12 +221,12 @@ export default async function ShareableArtworkPage({
         </section>
       )}
 
-      {/* 4. Related artworks */}
+      {/* 4. More like this (DNA-similarity ranking) */}
       {related.length > 0 && (
         <section className="bg-background-secondary px-5 py-12 md:px-12 md:py-20">
           <div className="mx-auto max-w-5xl">
             <p className="mb-6 text-[11px] tracking-[0.3em] uppercase text-foreground-subtle">
-              Other artworks using {artwork.shaderGraph.system}
+              More like this · ranked by genome distance
             </p>
             <div className="grid gap-4 md:grid-cols-3">
               {related.map((r) => (
@@ -299,12 +300,15 @@ function NotFound() {
 }
 
 function pickRelated(target: Artwork, all: Artwork[]): Artwork[] {
+  // DNA-similarity "more like this" — Stage 21.
+  // Falls back to system+palette match when only one artwork exists.
+  const similar = similarArtworks(target, all, 4);
+  if (similar.length > 0) return similar;
   return all
     .filter(
       (a) =>
         a.id !== target.id &&
-        a.shaderGraph.system === target.shaderGraph.system &&
-        a.shaderGraph.palette === target.shaderGraph.palette,
+        a.shaderGraph.system === target.shaderGraph.system,
     )
     .slice(0, 3);
 }
