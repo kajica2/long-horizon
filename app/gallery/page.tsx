@@ -236,6 +236,18 @@ export default async function GalleryPage({
             >
               View Collections →
             </Link>
+            <Link
+              href="/explore"
+              className="inline-block rounded-md border border-border px-4 py-2 text-xs tracking-[0.2em] uppercase text-foreground transition-base hover:border-border-strong"
+            >
+              Explore →
+            </Link>
+            <Link
+              href="/polaroids"
+              className="inline-block rounded-md border border-border px-4 py-2 text-xs tracking-[0.2em] uppercase text-foreground transition-base hover:border-border-strong"
+            >
+              Polaroid Wall →
+            </Link>
           </div>
         </div>
       </div>

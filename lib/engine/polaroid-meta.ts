@@ -131,6 +131,31 @@ export async function listPolaroids(
 }
 
 /**
+ * Read polaroid metadata across ALL artworks. Used by /polaroids wall.
+ * Returns most-recent-first. Skips files without a valid sidecar JSON.
+ */
+export async function listAllPolaroids(
+  captureDir: string,
+): Promise<PolaroidMetadata[]> {
+  try {
+    const files = await fs.readdir(captureDir);
+    const jsonFiles = files.filter((f) => f.endsWith(".png.json"));
+    const out: PolaroidMetadata[] = [];
+    for (const f of jsonFiles) {
+      try {
+        const text = await fs.readFile(path.join(captureDir, f), "utf-8");
+        out.push(JSON.parse(text) as PolaroidMetadata);
+      } catch {
+        // skip malformed
+      }
+    }
+    return out.sort((a, b) => (a.capturedAt < b.capturedAt ? 1 : -1));
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Build a PolaroidMetadata from an Artwork + a timestamp.
  * Convenience for the API route.
  */
