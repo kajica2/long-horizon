@@ -22,7 +22,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useThree } from "@react-three/fiber";
 
 type RecordState = "idle" | "preparing" | "recording" | "processing" | "done" | "error";
 
@@ -32,11 +31,20 @@ const VIDEO_PATH = (id: string) => `/api/artworks/${id}/video`;
 export function RecordingPanel({
   artworkId,
   seed,
+  canvas,
 }: {
   artworkId: string | null;
   seed: string;
+  /**
+   * The WebGL canvas element rendered by EngineCanvas. RecordingPanel
+   * sits OUTSIDE the R3F Canvas tree, so it can't call useThree() — the
+   * parent container passes the canvas DOM element down instead.
+   * (Pre-Stage-26: this used useThree() directly, which crashed when the
+   * panel was moved out of the canvas tree. The prop-based approach is
+   * also more testable.)
+   */
+  canvas: HTMLCanvasElement | null;
 }) {
-  const { gl } = useThree();
   const [recordState, setRecordState] = useState<RecordState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [polaroidUrl, setPolaroidUrl] = useState<string | null>(null);
@@ -52,9 +60,15 @@ export function RecordingPanel({
     setRecordState("processing");
     setError(null);
 
+    if (!canvas) {
+      setError("Canvas not ready");
+      setRecordState("error");
+      return;
+    }
+
     try {
       // Force a fresh frame to be rendered
-      gl.domElement.toBlob(async (blob) => {
+      canvas.toBlob(async (blob: Blob | null) => {
         if (!blob) {
           setError("Could not capture frame");
           setRecordState("error");
@@ -97,10 +111,15 @@ export function RecordingPanel({
     }
     setError(null);
 
+    if (!canvas) {
+      setError("Canvas not ready");
+      return;
+    }
+
     try {
-      const stream = gl.domElement.captureStream(60);
+      const stream = canvas.captureStream(60);
       // Mix in audio if present
-      const audioStream = (gl.domElement as HTMLCanvasElement & { _audioStream?: MediaStream })._audioStream;
+      const audioStream = (canvas as HTMLCanvasElement & { _audioStream?: MediaStream })._audioStream;
       let combined = stream;
       if (audioStream) {
         combined = new MediaStream([

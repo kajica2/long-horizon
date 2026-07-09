@@ -38,6 +38,7 @@ export function EngineView({ id }: { id: string }) {
   useGlContextRecovery(canvasContainerRef);
   const [deviceTier, setDeviceTier] = useState<DeviceTier>("desktop");
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
 
   const setShaderGraph = useEngineStore((s) => s.setShaderGraph);
   const setPlanetaryModulation = useEngineStore(
@@ -73,6 +74,29 @@ export function EngineView({ id }: { id: string }) {
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, []);
+
+  // Watch for the WebGL canvas to mount inside the container. R3F mounts
+  // its own <canvas> child; we wait for it so RecordingPanel can capture
+  // from it. Recreated when `resetKey` changes (engine rebuilds).
+  useEffect(() => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
+    const find = () => container.querySelector("canvas") as HTMLCanvasElement | null;
+    const existing = find();
+    if (existing) {
+      setCanvas(existing);
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      const c = find();
+      if (c) {
+        setCanvas(c);
+        observer.disconnect();
+      }
+    });
+    observer.observe(container, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [resetKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,7 +165,7 @@ export function EngineView({ id }: { id: string }) {
         />
       </div>
       <ParameterPanel />
-      <RecordingPanel artworkId={artwork?.id ?? null} seed={seed} />
+      <RecordingPanel artworkId={artwork?.id ?? null} seed={seed} canvas={canvas} />
       <EngineControls onReset={() => setResetKey((k) => k + 1)} />
       {artwork && (
         <div className="pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 transform">
