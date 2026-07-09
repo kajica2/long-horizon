@@ -439,6 +439,7 @@ async function main() {
   await seedSandTravelerArtworks();
   await seedDeJongAttractorArtworks();
   await seedStage16To18Artworks();
+  await seedCollections();
 }
 
 async function seedSandTravelerArtworks() {
@@ -727,3 +728,61 @@ main()
 
 // silence the mulberry32 import — kept for future use
 void mulberry32;
+
+// ============================================================
+// Stage 20: Collections — curated named sets of artworks.
+// Three seed collections group the existing seed artworks so the
+// /collections and /c/[slug] pages have content to show on first run.
+// ============================================================
+
+async function seedCollections() {
+  const { addOrUpdateCollection } = await import("@/lib/collection-store");
+  const seeds = [
+    {
+      slug: "living-patterns",
+      title: "Living Patterns",
+      description:
+        "Three living systems — Gray-Scott reaction-diffusion, the Lorenz strange attractor, and Physarum slime mold — each grown from a seed, each forming structures that no static algorithm would draw. A small tour of emergent complexity.",
+      curator: "Kai Djuric",
+      artworkIds: [
+        "rd-mitosis",
+        "rd-stripes",
+        "lorenz-butterfly",
+        "lorenz-figure-eight",
+        "physarum-network",
+      ],
+    },
+    {
+      slug: "tarbell-2004",
+      title: "Tarbell, 2004",
+      description:
+        "Two pieces inspired by Jared Tarbell's 2004 processings — Sand Traveler (200 cities painting on cream paper) and the de Jong attractor (4000 travelers iterating a phase-space map, ink on cream). Both are pure procedural; no audio, no images, just math accumulating.",
+      curator: "Long Horizon",
+      artworkIds: [
+        "sand-tarbell-port",
+        "sand-bone-reliquary",
+        "dejong-bourke",
+        "dejong-ribbon",
+      ],
+    },
+    {
+      slug: "image-as-genome",
+      title: "Image as Genome",
+      description:
+        "Five VisualDNA-driven pieces. Each starts from a real photograph and extracts a palette + composition profile; that profile becomes the shader graph's starting state. The image is gone, but its genome persists in the piece.",
+      curator: "Long Horizon",
+      artworkIds: [
+        "visual-warm-sunset",
+        "visual-cold-moonscape",
+        "visual-aurora",
+        "visual-bone",
+        "visual-moss",
+      ],
+    },
+  ];
+
+  for (const c of seeds) {
+    await addOrUpdateCollection(c);
+    console.log(`  ${c.slug} — ${c.title} (${c.artworkIds.length} pieces)`);
+  }
+}

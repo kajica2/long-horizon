@@ -28,6 +28,8 @@ model Artwork {
   parentId      String?  // canonical JSON: remix chain (action 20)
 
   comments      Comment[]
+  reactions     Reaction[]
+  items         CollectionItem[]
 
   @@index([creator])
   @@index([createdAt])
@@ -44,4 +46,41 @@ model Comment {
   artwork    Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
 
   @@index([artworkId, createdAt])
+}
+
+model Reaction {
+  id         String   @id @default(cuid())
+  artworkId  String
+  likerId    String   // anonymous session id, or user id when auth lands
+  kind       String   @default("heart") // "heart" | future kinds
+  createdAt  DateTime @default(now())
+
+  artwork    Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@unique([artworkId, likerId, kind])
+  @@index([artworkId])
+}
+
+model Collection {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  title       String
+  description String
+  curator     String
+  createdAt   DateTime         @default(now())
+
+  items       CollectionItem[]
+}
+
+model CollectionItem {
+  id           String     @id @default(cuid())
+  collectionId String
+  artworkId    String
+  position     Int
+
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  artwork      Artwork    @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, artworkId])
+  @@index([collectionId, position])
 }

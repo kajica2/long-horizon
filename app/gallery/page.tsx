@@ -223,12 +223,20 @@ export default async function GalleryPage({
           <p className="mb-3 text-sm text-foreground-muted">
             Upload your own image, capture a planetary moment, or load your birth data.
           </p>
-          <Link
-            href="/create"
-            className="inline-block rounded-md border border-border px-4 py-2 text-xs tracking-[0.2em] uppercase text-foreground transition-base hover:border-border-strong"
-          >
-            Open Create →
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/create"
+              className="inline-block rounded-md border border-border px-4 py-2 text-xs tracking-[0.2em] uppercase text-foreground transition-base hover:border-border-strong"
+            >
+              Open Create →
+            </Link>
+            <Link
+              href="/collections"
+              className="inline-block rounded-md border border-border px-4 py-2 text-xs tracking-[0.2em] uppercase text-foreground transition-base hover:border-border-strong"
+            >
+              View Collections →
+            </Link>
+          </div>
         </div>
       </div>
     </main>
