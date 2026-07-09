@@ -33,6 +33,46 @@
 | 13 | VisualDNA pipeline | ✅ done | `lib/visual/dna.ts` (sharp + k-means palette + Sobel edges + composition), `/api/visual/dna` POST endpoint, `lib/visual/bindings.ts` (DNA → ShaderGraph param deltas), Prisma migration `add_visual_dna`, engine store `setVisualDNA` action, 2 visual-driven seeds (sunset + moonscape). Tests 116/116. Stage 13/30 of Long Horizon roadmap. |
 | 14 | VisualDNA end-to-end | ✅ done | `/api/visual/create` POST endpoint (saves Artwork from VisualDNA + DNA-derived shaderGraph). `components/create/UploadPanel.tsx` — drag-drop upload, preview, palette + 6 feature bars, create button. `/create` page now: list audio + list visual + upload panel. `ParameterPanel` has Visual DNA accordion with palette + features + influence slider that scales the bound params live. `EngineView` loads visualDNA on artwork mount, applies bindings, shows palette + DNA in title strip. Browser/client safe helper split out into `lib/visual/palette-name.ts` (no sharp dep). Tests 123/123 (+7 visual-flow). |
 | 15 | Public gallery | ✅ done | `/gallery` route — server-rendered grid of all Artwork records. `components/gallery/ArtworkTile.tsx` — source-specific thumbnails (palette swatch / audio glyph / planetary wheel / natal wheel / system glyph). Filter chips: source · system · palette (URL-driven). 13 seed artworks in DB (3 audio + 3 planetary + 2 sand + 2 de Jong + 5 visual). `/a/[id]` polished: 3-section layout (hero / genome reveal / related artworks / footer); ↓ Polaroid + ↓ Video download CTAs; remix CTA via `/create?remix=[id]`. Stage 15/30 of Long Horizon roadmap. |
+| 16 | Reaction-Diffusion | ✅ done | Gray-Scott Turing patterns. CPU solver at 512×512, ping-pong Float32Arrays, palette-mapped render to CanvasTexture on a 3D plane. `lib/engine/reaction-diffusion.ts` + `lib/engine/shaders/` (skipped — CPU render) + `components/engine/ReactionDiffusion.tsx`. 15 tests covering determinism, parameter stability, preset regimes. Dispatch manifest: `lib/engine/dispatch-reaction-diffusion.ts`. Seeds: `rd-mitosis` (F=0.0367, k=0.0649), `rd-stripes` (F=0.022, k=0.051). Tests 187/187 (baseline 144 + 15 new). Stage 16/30. |
+| 17 | Lorenz Attractor | ✅ done | 3D strange attractor (Lorenz 1963), classical σ=10, ρ=28, β=8/3 with seed-jittered but bounded variants. RK4 integration dt=0.005, 8000-point circular trail buffer. THREE.Line + custom ShaderMaterial (NOT Line2 — its InterleavedBuffer array/count is read-only in @types/three). `lib/engine/lorenz-attractor.ts` + `lib/engine/shaders/lorenz-render.ts` + `components/engine/LorenzAttractor.tsx`. 12 tests covering determinism, RK4 smoothness, boundedness, circular buffer. Dispatch: `lib/engine/dispatch-lorenz-attractor.ts`. Seeds: `lorenz-butterfly` (8000 trail, ink palette), `lorenz-figure-eight` (6000 trail, aurora palette, orbit camera). Tests 187/187. Stage 17/30. |
+| 18 | Slime Mold (Physarum) | ✅ done | Agent-based simulation (Jeff Jones 2010 model). CPU step bounded at 2000 agents for tests; runtime path uses 3 GLSL shaders (compute + deposit + render) with ping-pong RTs. 65536 agents / 16384 on low tier. RGBA32F agent texture packing (x, y, heading, agentSeed). `lib/engine/physarum.ts` + 3 shader files + `components/engine/Physarum.tsx`. 16 tests covering determinism, agent stepping, sense/decide, decay, boundedness. Dispatch: `lib/engine/dispatch-physarum.ts`. Seed: `physarum-network` (65536 agents, moss palette). Tests 187/187. Stage 18/30. |
+
+---
+
+## Cycle 1 Wave 1 (subagent-swarm) — 2026-07-09
+
+**Pattern**: 3 system workers in parallel git worktrees (`wt/reaction-diffusion`, `wt/lorenz-attractor`, `wt/physarum`). Each built end-to-end and was forbidden from touching shared files. Orchestrator (me) applied integration after all 3 PASS.
+
+**Worktree infrastructure**: `node_modules` symlinked from parent project. Pre-existing prisma dev.db + tmp/corpus copied. `vitest.config.ts` patched to default `DATABASE_URL` so DB-touching tests run without env prefix. Turbopack panics on symlinked `node_modules` — workers used `next build --webpack` as a local workaround; orchestrator reverted it on main since main's node_modules is a real directory and Turbopack works fine there.
+
+**Slice results**:
+- Reaction-Diffusion: PASS. 4 files. 15 tests added. Summary: `out/reaction-diffusion/summary.md` (worktree).
+- Lorenz Attractor: PASS. 5 files. 12 tests added. Summary: `out/lorenz-attractor/summary.md` (worktree).
+- Physarum: PASS. 7 files. 16 tests added. Summary: `out/physarum/summary.md` (worktree).
+
+**Integration (orchestrator)**:
+- `lib/types.ts`: extended `LivingSystemName` union
+- `components/engine/EngineCanvas.tsx` + `ShareableViewer.tsx`: dispatch arms for the 3 new systems
+- `lib/engine/store.ts`: `resetParams` handles the 3 new systems (their default param sets)
+- `components/engine/ParameterPanel.tsx`: header display name + `defaultParamsFor()` extended
+- `app/gallery/page.tsx`: `SYSTEM_LABELS` + `SYSTEM_DESCRIPTIONS` for new systems
+- `prisma/seed.ts`: 5 new seed artworks (2 RD + 2 LZ + 1 PM)
+
+**Final verification**: 187/187 tests pass · typecheck clean · build clean · 20 seed artworks in DB (3 audio + 3 planetary + 2 sand + 2 de Jong + 5 visual + 5 new).
+
+**Commits**:
+- `50528a5` Preflight: default DATABASE_URL in vitest env
+- `0ef18bd` Stage 16: Reaction-Diffusion (merge of wt/reaction-diffusion)
+- `809e55e` Stage 16: Reaction-Diffusion (the actual merge commit)
+- `f05d1e9` Stage 17: Lorenz Attractor (merge)
+- `ec5603a` Stage 18: Slime Mold (merge)
+- `55a4489` Revert build --webpack flag (worktree-only workaround)
+- `a8baae0` Stages 16-18 integration: extend LivingSystemName + dispatch + resetParams + seeds
+
+**Lessons**:
+1. Each system worker's dispatch manifest was a `lib/engine/dispatch-<name>.ts` file — clean way to ship a system's contract without touching shared files.
+2. Function hoisting in TS strict mode isn't always reliable when `await` is involved — declaring helper functions before main() avoids the issue.
+3. Turbopack doesn't follow symlinked node_modules — webpack is the workaround; main project (real node_modules) is unaffected.
 
 ---
 
