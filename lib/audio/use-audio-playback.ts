@@ -50,7 +50,13 @@ export function useAudioPlayback(
   // Create / dispose the playback graph
   useEffect(() => {
     if (!src || !enabled) {
+      // Sync the engine store + local state to "no audio playing" when
+      // audio is disabled or unavailable. This is the canonical
+      // prop→state pattern; setState inside useEffect is correct here
+      // because we want to mirror the external prop change into state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsReady(false);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsPlaying(false);
       setAudioBands(0, 0, 0, 0);
       return;

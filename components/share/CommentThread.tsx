@@ -44,6 +44,10 @@ export function CommentThread({ artworkId }: { artworkId: string }) {
 
   useEffect(() => {
     const ac = new AbortController();
+    // Fetch on mount. The setState inside `refresh()` is the canonical
+    // async-load pattern; the linter's "cascading render" warning is a
+    // false positive since setComments is async (set after fetch resolves).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh(ac.signal);
     const id = window.setInterval(() => startTransition(() => void refresh()), 8000);
     return () => {

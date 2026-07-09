@@ -291,7 +291,7 @@ function NotFound() {
         <p className="text-xs tracking-[0.3em] uppercase text-foreground-subtle mb-2">
           404
         </p>
-        <p className="text-sm">This artwork doesn't exist.</p>
+        <p className="text-sm">This artwork doesn&apos;t exist.</p>
         <Link href="/" className="mt-4 inline-block text-xs text-aurora-cyan transition-base hover:opacity-70">
           ← Back to gallery
         </Link>

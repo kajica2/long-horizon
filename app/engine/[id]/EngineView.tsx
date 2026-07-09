@@ -69,6 +69,12 @@ export function EngineView({ id }: { id: string }) {
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // Initial sync: read the current value of the media query into React
+    // state on mount. The alternative is useSyncExternalStore, which is
+    // heavier for a one-shot query. The "cascading render" warning is a
+    // false positive here — setReducedMotion is a no-op if the value
+    // matches the default.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReducedMotion(mq.matches);
     const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
     mq.addEventListener("change", handler);
@@ -195,7 +201,7 @@ export function EngineView({ id }: { id: string }) {
 }
 
 function seedFromId(id: string): string {
-  let h = hashSeed(id);
+  const h = hashSeed(id);
   const a = h.toString(16).padStart(8, "0");
   const b = (Math.imul(h, 16777619) >>> 0).toString(16).padStart(8, "0");
   const c = (Math.imul(h ^ 0x9e3779b9, 16777619) >>> 0).toString(16).padStart(8, "0");

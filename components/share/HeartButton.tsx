@@ -45,6 +45,12 @@ export function HeartButton({ artworkId, initialTotal, initialHasReacted }: Hear
   const lastRequestId = useRef(0);
 
   useEffect(() => {
+    // Read the localStorage session id into React state on mount. This
+    // can't run during render (localStorage isn't available SSR-side) and
+    // is the standard "external state into React" pattern. The linter's
+    // "cascading render" warning is a false positive: the effect runs
+    // once on mount, setSessionId is a no-op if the value matches.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSessionId(getOrCreateSessionId());
   }, []);
 

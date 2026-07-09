@@ -75,7 +75,8 @@ export async function decodeAudio(buffer: Buffer): Promise<DecodedAudio> {
  * Compute the SHA-256 hash of an audio file's bytes.
  * Used as the canonical Soundtrack identifier.
  */
+import { createHash } from "node:crypto";
+
 export function hashAudio(buffer: Buffer): string {
-  const { createHash } = require("node:crypto") as typeof import("node:crypto");
   return createHash("sha256").update(buffer).digest("hex");
 }

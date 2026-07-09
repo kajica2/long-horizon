@@ -1,4 +1,12 @@
 // Type stubs for libraries without TypeScript declarations.
+//
+// The `any` types here are intentional — these are interop shims for
+// libraries that don't ship their own .d.ts files. The eslint config
+// file-scoped disables below suppress @typescript-eslint/no-explicit-any
+// for this file only; everywhere else in the project, `any` is still
+// a lint error.
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 declare module "essentia.js" {
   export const EssentiaWASM: any;

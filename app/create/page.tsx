@@ -26,6 +26,12 @@ export default async function CreatePage({
       const src = await getArtwork(params.remix);
       if (src) {
         const { saveArtwork } = await import("@/lib/artwork-store");
+        // The linter flags Date.now() + new Date() as "impure during
+        // render" — this is a server component so the page is computed
+        // once per request. Side effects (saveArtwork + redirect) are
+        // intentional here: remix creates a new artwork, then redirects
+        // the user to the new engine URL.
+        // eslint-disable-next-line react-hooks/purity
         const remixId = `remix-${src.id}-${Date.now().toString(36).slice(-6)}`;
         await saveArtwork({
           ...src,

@@ -175,7 +175,7 @@ function runEssentia(
   let totalZcr = 0;
   let totalCentroid = 0;
   let frameCount = 0;
-  let mfccs: number[][] = [];
+  const mfccs: number[][] = [];
   let prevSpectrum: Float32Array | null = null;
   let totalFlux = 0;
 
@@ -283,7 +283,7 @@ function runMeyda(
   let totalCentroid = 0;
   let totalRms = 0;
   let totalZcr = 0;
-  let mfccs: number[][] = [];
+  const mfccs: number[][] = [];
   let prevMag: Float32Array | null = null;
   let totalFlux = 0;
   let frameCount = 0;

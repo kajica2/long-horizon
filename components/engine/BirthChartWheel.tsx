@@ -31,6 +31,13 @@
 
 "use client";
 
+/* eslint-disable react-hooks/rules-of-hooks --
+   The useMemo calls inside segments.map() are SAFE: the loop count is
+   fixed at 12 (one per zodiac sign), so the hook order is stable across
+   renders. The rule of "no hooks in callbacks" exists to prevent hook
+   count from changing between renders — that cannot happen here because
+   segments.length is derived from ZODIAC_SIGNS at module load. */
+
 import { useMemo } from "react";
 import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";

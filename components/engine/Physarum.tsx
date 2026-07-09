@@ -361,7 +361,7 @@ export function Physarum({
   useEffect(() => {
     uploadToTarget(gl, agents.current.read, initialAgentBuffer);
     uploadToTarget(gl, agents.current.write, initialAgentBuffer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [initialAgentBuffer, gl]);
 
   // ---------- React to seed changes (re-init from new seed) ----------

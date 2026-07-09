@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { BACKGROUND_VERTEX, BACKGROUND_FRAGMENT } from "@/lib/engine/shaders/background";
@@ -54,13 +54,14 @@ export function BackgroundLayer() {
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Update palette colors when palette changes
-  const lastPalette = useRef(palette);
-  if (lastPalette.current !== palette) {
+  // Update palette colors when palette changes.
+  // Moved from "compare ref during render" to a useEffect to satisfy
+  // react-hooks/refs and react-hooks/immutability rules — mutating refs
+  // during render causes issues with concurrent rendering.
+  useEffect(() => {
     material.uniforms.u_colorTop.value = paletteColors.top;
     material.uniforms.u_colorBottom.value = paletteColors.bottom;
-    lastPalette.current = palette;
-  }
+  }, [material, paletteColors.top, paletteColors.bottom]);
 
   useFrame((_state, dt) => {
     if (paused) return;

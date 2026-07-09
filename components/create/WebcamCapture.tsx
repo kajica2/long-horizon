@@ -218,7 +218,7 @@ export function WebcamCapture() {
         state.stage === "analyzing") && (
         <>
           <div className="relative overflow-hidden rounded-lg bg-black aspect-video">
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            { }
             <video
               ref={videoRef}
               autoPlay
