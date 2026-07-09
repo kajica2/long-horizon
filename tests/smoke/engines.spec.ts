@@ -65,3 +65,73 @@ test("shareable page exposes remix action", async ({ page }) => {
   const remix = page.getByRole("link", { name: /remix/i }).first();
   await expect(remix).toBeVisible({ timeout: 10_000 });
 });
+
+/**
+ * Long Horizon smoke — Reaction-Diffusion engine boots (Stage 16).
+ *
+ * Uses the `rd-mitosis` seed. The Gray-Scott solver is CPU-side; on a
+ * headless swiftshader runner we only assert that the page hydrates and the
+ * solver doesn't throw.
+ */
+test("engine page boots for reaction-diffusion (rd-mitosis)", async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+
+  const res = await page.goto("/engine/rd-mitosis", { waitUntil: "networkidle" });
+  expect(res?.ok()).toBe(true);
+
+  // RD evolves meaningfully within ~3s on swiftshader.
+  await page.waitForTimeout(3000);
+
+  const realErrors = errors.filter(
+    (e) => !/webgl|swiftshader|three\.js|hardware/i.test(e),
+  );
+  expect(realErrors).toEqual([]);
+});
+
+/**
+ * Long Horizon smoke — Lorenz Attractor engine boots (Stage 17).
+ *
+ * Uses the `lorenz-butterfly` seed. Trail accumulation is GPU-side; we
+ * only assert hydration + no fatal error.
+ */
+test("engine page boots for lorenz attractor (lorenz-butterfly)", async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+
+  const res = await page.goto("/engine/lorenz-butterfly", { waitUntil: "networkidle" });
+  expect(res?.ok()).toBe(true);
+
+  // Lorenz needs time to lay down a visible trail.
+  await page.waitForTimeout(3000);
+
+  const realErrors = errors.filter(
+    (e) => !/webgl|swiftshader|three\.js|hardware/i.test(e),
+  );
+  expect(realErrors).toEqual([]);
+});
+
+/**
+ * Long Horizon smoke — Physarum engine boots (Stage 18).
+ *
+ * Uses the `physarum-network` seed (65k agents). On a headless runner the
+ * agent step itself is the slow part — we still only assert hydration.
+ */
+test("engine page boots for physarum (physarum-network)", async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+
+  const res = await page.goto("/engine/physarum-network", { waitUntil: "networkidle" });
+  expect(res?.ok()).toBe(true);
+
+  // Physarum network needs a few seconds to deposit visible trails.
+  await page.waitForTimeout(3000);
+
+  const realErrors = errors.filter(
+    (e) => !/webgl|swiftshader|three\.js|hardware/i.test(e),
+  );
+  expect(realErrors).toEqual([]);
+});

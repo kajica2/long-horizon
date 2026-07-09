@@ -44,6 +44,7 @@ import {
 } from "@/lib/engine/physarum";
 import { PHYSARUM } from "@/lib/engine/dispatch-physarum";
 import { useEngineStore } from "@/lib/engine/store";
+import { useAudioBindings } from "@/lib/engine/use-audio-bindings";
 import type { DeviceTier } from "@/lib/engine/responsive";
 
 const PHEROMONE_SIZE = 1024; // square pheromone field
@@ -150,13 +151,47 @@ export function Physarum({
   const palette = shaderGraph.palette;
   const paused = useEngineStore((s) => s.paused);
   const setSimTime = useEngineStore((s) => s.setSimTime);
-  const audioBass = useEngineStore((s) => s.audioBass);
-  const audioMid = useEngineStore((s) => s.audioMid);
-  const audioTreble = useEngineStore((s) => s.audioTreble);
-  // The dispatch manifest binds vocals → diffuse. Vocals is conventionally
-  // the highest band; we approximate it with treble (the engine store exposes
-  // bass/mid/treble but not vocals, so treble is the best proxy).
-  const audioVocals = audioTreble;
+
+  // ---------- Audio bindings ----------
+  // The dispatch manifest binds:
+  //   bass    → decay        (pheromone field retention per step; [0.8, 0.99])
+  //   mid     → sensorDistance (how far the agent senses ahead)
+  //   treble  → stepSize     (how far the agent moves per step)
+  //   vocals  → diffuse      (3x3 gaussian blend coefficient; [0, 1])
+  //
+  // The hook's per-param `min`/`max` keeps decay in the physically-meaningful
+  // range [0.8, 0.99] so audio modulation cannot push it into divergence
+  // (decay >= 1 means pheromone grows without bound; decay <= 0 means the
+  // field instantly evaporates, killing the network).
+  const { computeModulatedParams } = useAudioBindings({
+    bindings: PHYSARUM.audioBindings,
+    configs: {
+      decay: {
+        min: PHYSARUM.paramRanges.decay[0],
+        max: PHYSARUM.paramRanges.decay[1],
+        modulationStrength: 0.05,
+        baseline: PHYSARUM.defaultParams.decay,
+      },
+      sensorDistance: {
+        min: PHYSARUM.paramRanges.sensorDistance[0],
+        max: PHYSARUM.paramRanges.sensorDistance[1],
+        modulationStrength: 6.0,
+        baseline: PHYSARUM.defaultParams.sensorDistance,
+      },
+      stepSize: {
+        min: PHYSARUM.paramRanges.stepSize[0],
+        max: PHYSARUM.paramRanges.stepSize[1],
+        modulationStrength: 0.8,
+        baseline: PHYSARUM.defaultParams.stepSize,
+      },
+      diffuse: {
+        min: PHYSARUM.paramRanges.diffuse[0],
+        max: PHYSARUM.paramRanges.diffuse[1],
+        modulationStrength: 0.3,
+        baseline: PHYSARUM.defaultParams.diffuse,
+      },
+    },
+  });
 
   const seedRef = useRef(seed);
 
@@ -388,24 +423,29 @@ export function Physarum({
       pheromone.current.write = tmp;
     }
 
-    // 4. Audio modulation — bass → decay, mid → sensorDistance,
-    //    treble → stepSize, vocals → diffuse.
-    sim.computeMat.uniforms.u_sensorDistance.value =
-      Number(PHYSARUM.defaultParams.sensorDistance) * (1 + audioMid * 0.5);
-    sim.computeMat.uniforms.u_stepSize.value =
-      Number(PHYSARUM.defaultParams.stepSize) * (1 + audioTreble * 0.4);
-    sim.depositMat.uniforms.u_decay.value = Math.max(
-      0.7,
-      Number(PHYSARUM.defaultParams.decay) * (1 + audioBass * 0.05),
-    );
-    sim.depositMat.uniforms.u_diffuse.value = Math.min(
-      1,
-      Number(PHYSARUM.defaultParams.diffuse) + audioVocals * 0.1,
-    );
+    // 4. Audio modulation — driven by the dispatch manifest's audioBindings
+    //    via useAudioBindings. The hook smooths each band toward its target
+    //    with attack/release smoothing and clamps to the per-param safe range.
+    const mod = computeModulatedParams();
+    const p = mod.params;
+    const bands = mod.bands;
+    if (typeof p.sensorDistance === "number") {
+      sim.computeMat.uniforms.u_sensorDistance.value = p.sensorDistance;
+    }
+    if (typeof p.stepSize === "number") {
+      sim.computeMat.uniforms.u_stepSize.value = p.stepSize;
+    }
+    if (typeof p.decay === "number") {
+      sim.depositMat.uniforms.u_decay.value = p.decay;
+    }
+    if (typeof p.diffuse === "number") {
+      sim.depositMat.uniforms.u_diffuse.value = p.diffuse;
+    }
 
     // 5. Update the visible render material with the current pheromone texture
     sim.renderMat.uniforms.u_pheromoneTex.value = pheromone.current.read.texture;
-    sim.renderMat.uniforms.u_intensity.value = 1.0 + audioBass * 0.4 + audioTreble * 0.2;
+    sim.renderMat.uniforms.u_intensity.value =
+      1.0 + bands.bass * 0.4 + bands.treble * 0.2;
 
     frameCounter.current++;
     setSimTime(frameCounter.current / 60);

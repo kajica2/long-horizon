@@ -30,6 +30,8 @@ import {
   LORENZ_FRAGMENT,
   LORENZ_PALETTES,
 } from "@/lib/engine/shaders/lorenz-render";
+import { useAudioBindings } from "@/lib/engine/use-audio-bindings";
+import { LORENZ_ATTRACTOR } from "@/lib/engine/dispatch-lorenz-attractor";
 
 /**
  * Static camera placement that frames the Lorenz attractor.
@@ -77,6 +79,48 @@ export function LorenzAttractor({ seed, initialMaxPoints }: LorenzProps) {
   const params = shaderGraph.params;
   const audioBass = useEngineStore((s) => s.audioBass);
   const audioMid = useEngineStore((s) => s.audioMid);
+
+  // ---------- Audio bindings ----------
+  // The dispatch manifest binds bass → sigma, mid → rho, treble → trailLength,
+  // vocals → fadeTail. sigma/rho modulation is intentionally *gentle* — they
+  // sit in narrow ranges around the classical values (10, 28) where the
+  // attractor is bounded and butterfly-shaped. Pushing sigma/rho out of
+  // that regime destabilises the integrator (the orbit diverges to ±∞).
+  // The hook's per-param `min`/`max` enforces the safe range; the strength
+  // values are tuned to small enough swings that the trail stays visually
+  // coherent under bass hits.
+  const { computeModulatedParams } = useAudioBindings({
+    bindings: LORENZ_ATTRACTOR.audioBindings,
+    configs: {
+      sigma: {
+        min: LORENZ_ATTRACTOR.paramRanges.sigma[0],
+        max: LORENZ_ATTRACTOR.paramRanges.sigma[1],
+        modulationStrength: 3.0,
+        baseline: LORENZ_ATTRACTOR.defaultParams.sigma,
+      },
+      rho: {
+        min: LORENZ_ATTRACTOR.paramRanges.rho[0],
+        max: LORENZ_ATTRACTOR.paramRanges.rho[1],
+        modulationStrength: 5.0,
+        baseline: LORENZ_ATTRACTOR.defaultParams.rho,
+      },
+      trailLength: {
+        // Trail length lives in [1000, 16000] (manifest range). We let the
+        // smoothed value stay inside that range; when audio is silent, the
+        // trail settles back to the manifest default.
+        min: LORENZ_ATTRACTOR.paramRanges.trailLength[0],
+        max: LORENZ_ATTRACTOR.paramRanges.trailLength[1],
+        modulationStrength: 4000,
+        baseline: LORENZ_ATTRACTOR.defaultParams.trailLength,
+      },
+      fadeTail: {
+        min: LORENZ_ATTRACTOR.paramRanges.fadeTail[0],
+        max: LORENZ_ATTRACTOR.paramRanges.fadeTail[1],
+        modulationStrength: 0.1,
+        baseline: LORENZ_ATTRACTOR.defaultParams.fadeTail,
+      },
+    },
+  });
 
   // Build a fresh simulation whenever the seed changes.
   const state: LorenzState = useMemo(() => {
@@ -168,6 +212,40 @@ export function LorenzAttractor({ seed, initialMaxPoints }: LorenzProps) {
   // Keep the explicit camera framing applied even if CameraRig later
   // nudges the camera elsewhere (we re-stamp each frame at low priority).
   useFrame((_, dt) => {
+    // Apply audio-modulated params to the simulation state before
+    // stepping. We write directly into the LorenzState (sigma, rho, dt,
+    // trailLength) rather than going through updateParam() — calling
+    // updateParam() per-frame would trigger 60 store mutations/sec.
+    // The hook's per-param `min`/`max` clamps keep sigma and rho in the
+    // bounded-attractor regime so the integrator stays stable.
+    const mod = computeModulatedParams();
+    const p = mod.params;
+    if (state) {
+      if (typeof p.sigma === "number") state.sigma = p.sigma;
+      if (typeof p.rho === "number") state.rho = p.rho;
+      if (typeof p.trailLength === "number") {
+        // The trail buffer is allocated once per seed and never resized
+        // at runtime. Trail-length modulation only changes how much of
+        // the existing buffer is *visible* — we update `state.count` so
+        // the most recent N points render, where N is the smoothed
+        // trailLength capped at the buffer's actual size.
+        const target = Math.floor(p.trailLength);
+        const clamped = Math.max(2, Math.min(target, state.trailLength));
+        // count grows up to clamped then stays at clamped; we don't
+        // shrink it because doing so would chop the head off the buffer
+        // and break the ordered projection.
+        if (state.count < clamped) state.count = clamped;
+      }
+    }
+
+    // Push the audio-modulated fadeTail to the shader uniform. The
+    // panel-driven effect below writes the panel value; per-frame we
+    // overlay the audio-modulated value so the tail pulses with vocals.
+    const matEarly = materialRef.current;
+    if (matEarly && typeof p.fadeTail === "number") {
+      matEarly.uniforms.u_fadeTail.value = p.fadeTail;
+    }
+
     // Step the simulation at the configured dt (independent of frame dt).
     if (state) stepLorenz(state);
 
