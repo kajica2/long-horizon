@@ -13,8 +13,11 @@
 
 import Link from "next/link";
 import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { getArtwork, listArtworks, getRemixChain } from "@/lib/artwork-store";
 import { CommentThread } from "@/components/share/CommentThread";
+import { HeartButton } from "@/components/share/HeartButton";
+import { getReactionSummary } from "@/lib/reaction-store";
 import { artworkHash } from "@/lib/hash";
 import { ShareableViewer } from "@/components/engine/ShareableViewer";
 import type { Artwork } from "@/lib/types";
@@ -30,6 +33,13 @@ export default async function ShareableArtworkPage({
   const artwork = await getArtwork(id);
 
   if (!artwork) return <NotFound />;
+
+  // Read the visitor's likerId cookie (if any) so the heart starts in the
+  // correct state on first SSR render. Falls back to "" when absent —
+  // HeartButton generates a localStorage id client-side and reconciles.
+  const cookieStore = await cookies();
+  const likerId = cookieStore.get("lh_liker")?.value ?? "";
+  const reactionSummary = await getReactionSummary(artwork.id, likerId);
 
   const allArtworks = await listArtworks({ limit: 50 }).catch(() => [] as Artwork[]);
   const related = pickRelated(artwork, allArtworks);
@@ -85,6 +95,11 @@ export default async function ShareableArtworkPage({
           >
             ↓ Video
           </a>
+          <HeartButton
+            artworkId={artwork.id}
+            initialTotal={reactionSummary.total}
+            initialHasReacted={reactionSummary.hasReacted}
+          />
         </div>
       </header>
 
