@@ -6,7 +6,7 @@ A workspace by **Kai Djuric** (`kai@longhorizon.com`). See `AGENTS.md` for AI co
 
 ## Status
 
-**253/253 tests pass.** Build clean. 8 living systems, 28 seed artworks, 3 collections, 5 new public routes. See `STAGES.md` for the full build plan and the 23/30 Long Horizon roadmap.
+**314/314 tests pass.** Build clean. 8 living systems, 28 seed artworks, 3 collections, 6 mood variants per artwork. See `STAGES.md` for the full build plan and the 28/30 Long Horizon roadmap.
 
 ### Living systems shipped
 

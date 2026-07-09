@@ -15,6 +15,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { cookies } from "next/headers";
 import { getArtwork, listArtworks, getRemixChain } from "@/lib/artwork-store";
+import { resolveArtwork } from "@/lib/variant-resolver";
 import { CommentThread } from "@/components/share/CommentThread";
 import { HeartButton } from "@/components/share/HeartButton";
 import { getReactionSummary } from "@/lib/reaction-store";
@@ -31,7 +32,7 @@ export default async function ShareableArtworkPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const artwork = await getArtwork(id);
+  const artwork = await resolveArtwork(id);
 
   if (!artwork) return <NotFound />;
 

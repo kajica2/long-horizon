@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Artwork } from "@/lib/types";
+import { MoodLightbox } from "@/components/share/MoodLightbox";
 
 /**
  * ArtworkTile — single tile in the /gallery grid.
@@ -47,46 +48,64 @@ export function ArtworkTile({
   const showSystemGlyph = systemGlyphNode !== null;
 
   return (
-    <Link
-      href={`/engine/${artwork.id}`}
-      data-testid={`gallery-tile-${artwork.id}`}
-      className="group block overflow-hidden rounded-2xl border border-border bg-background-elevated transition-base hover:border-border-strong hover:bg-background-glass-hover hover:-translate-y-0.5"
-    >
-      <div className="aspect-[4/3] w-full overflow-hidden">
-        {showSystemGlyph ? (
-          systemGlyphNode
-        ) : source === "visual" ? (
-          <PaletteSwatch colors={palette} />
-        ) : source === "audio" ? (
-          <AudioGlyph tempo={artwork.audioDNA.tempo} keyName={artwork.audioDNA.key} />
-        ) : source === "planetary" && artwork.planetaryDNA ? (
-          <PlanetaryGlyph data={artwork.planetaryDNA} />
-        ) : source === "birth" && artwork.birthChart ? (
-          <WheelGlyph />
-        ) : (
-          <SystemGlyph
-            label={systemLabel}
-            description={systemDescription}
-            palette={palette}
-          />
-        )}
-      </div>
-      <div className="p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-[10px] tracking-[0.25em] uppercase text-foreground-subtle">
-            {source}
-          </p>
-          <p className="font-mono text-[10px] text-foreground-subtle">
-            {systemLabel}
+    <div className="group relative overflow-hidden rounded-2xl border border-border bg-background-elevated transition-base hover:border-border-strong hover:bg-background-glass-hover">
+      <Link
+        href={`/engine/${artwork.id}`}
+        data-testid={`gallery-tile-${artwork.id}`}
+        className="block"
+      >
+        <div className="aspect-[4/3] w-full overflow-hidden">
+          {showSystemGlyph ? (
+            systemGlyphNode
+          ) : source === "visual" ? (
+            <PaletteSwatch colors={palette} />
+          ) : source === "audio" ? (
+            <AudioGlyph tempo={artwork.audioDNA.tempo} keyName={artwork.audioDNA.key} />
+          ) : source === "planetary" && artwork.planetaryDNA ? (
+            <PlanetaryGlyph data={artwork.planetaryDNA} />
+          ) : source === "birth" && artwork.birthChart ? (
+            <WheelGlyph />
+          ) : (
+            <SystemGlyph
+              label={systemLabel}
+              description={systemDescription}
+              palette={palette}
+            />
+          )}
+        </div>
+        <div className="p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[10px] tracking-[0.25em] uppercase text-foreground-subtle">
+              {source}
+            </p>
+            <p className="font-mono text-[10px] text-foreground-subtle">
+              {systemLabel}
+            </p>
+          </div>
+          <p className="mb-1 text-lg text-foreground">{artwork.title ?? artwork.id}</p>
+          <p className="text-sm text-foreground-muted">{descriptionFor(artwork, source, sourceDescription)}</p>
+          <p className="mt-3 font-mono text-[10px] text-foreground-subtle transition-base group-hover:text-foreground-muted">
+            Open artwork →
           </p>
         </div>
-        <p className="mb-1 text-lg text-foreground">{artwork.title ?? artwork.id}</p>
-        <p className="text-sm text-foreground-muted">{descriptionFor(artwork, source, sourceDescription)}</p>
-        <p className="mt-3 font-mono text-[10px] text-foreground-subtle transition-base group-hover:text-foreground-muted">
-          Open artwork →
-        </p>
-      </div>
-    </Link>
+      </Link>
+      {/* Six moods button — Stage 26 lightbox trigger. Sits on the tile
+          surface; stops propagation so the parent Link doesn't navigate. */}
+      <MoodLightboxTrigger artwork={artwork} />
+    </div>
+  );
+}
+
+function MoodLightboxTrigger({ artwork }: { artwork: Artwork }) {
+  return (
+    <MoodLightbox artwork={artwork}>
+      <span
+        className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-border bg-background/80 px-2 py-1 text-[9px] tracking-[0.2em] uppercase text-foreground-subtle opacity-0 backdrop-blur transition-base hover:border-border-strong hover:text-foreground group-hover:opacity-100"
+        aria-hidden
+      >
+        ◐ Six moods
+      </span>
+    </MoodLightbox>
   );
 }
 

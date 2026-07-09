@@ -11,7 +11,9 @@
 
 import Link from "next/link";
 import path from "node:path";
-import { listAllPolaroids } from "@/lib/engine/polaroid-meta";
+import { listAllPolaroids, type PolaroidMetadata } from "@/lib/engine/polaroid-meta";
+import { getArtwork } from "@/lib/artwork-store";
+import { MoodLightbox } from "@/components/share/MoodLightbox";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,16 @@ const CAPTURE_DIR = path.resolve("./public/captures");
 
 export default async function PolaroidsWall() {
   const polaroids = await listAllPolaroids(CAPTURE_DIR);
+
+  // Resolve each polaroid's source artwork so the lightbox trigger can
+  // build its 6 mood variants. Missing artworks (capture orphan) render
+  // without the lightbox trigger.
+  const artworkCache = new Map<string, Awaited<ReturnType<typeof getArtwork>>>();
+  for (const p of polaroids) {
+    if (!artworkCache.has(p.artworkId)) {
+      artworkCache.set(p.artworkId, await getArtwork(p.artworkId));
+    }
+  }
 
   return (
     <main className="relative min-h-screen bg-aurora">
@@ -63,37 +75,62 @@ export default async function PolaroidsWall() {
           </div>
         ) : (
           <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
-            {polaroids.map((p) => (
-              <Link
-                key={p.polaroid}
-                href={`/a/${p.artworkId}`}
-                className="group mb-4 block break-inside-avoid overflow-hidden rounded-xl border border-border bg-background-elevated transition-base hover:border-border-strong"
-              >
-                <div className="bg-black/20">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/captures/${p.polaroid}`}
-                    alt={`Polaroid of ${p.artworkId}`}
-                    loading="lazy"
-                    className="h-auto w-full"
-                  />
+            {polaroids.map((p) => {
+              const sourceArtwork = artworkCache.get(p.artworkId) ?? null;
+              const tile = (
+                <PolaroidTile polaroid={p} />
+              );
+              return (
+                <div key={p.polaroid} className="mb-4 break-inside-avoid">
+                  {sourceArtwork ? (
+                    <MoodLightbox artwork={sourceArtwork}>
+                      {tile}
+                    </MoodLightbox>
+                  ) : (
+                    tile
+                  )}
                 </div>
-                <div className="p-3">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-foreground-subtle">
-                    {p.system} · {p.palette}
-                  </p>
-                  <p className="mt-1 text-sm text-foreground group-hover:text-aurora-cyan">
-                    {p.artworkId}
-                  </p>
-                  <p className="mt-1 font-mono text-[10px] text-foreground-subtle">
-                    {new Date(p.capturedAt).toLocaleString()} · {p.artworkHash.slice(0, 8)}
-                  </p>
-                </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
     </main>
+  );
+}
+
+function PolaroidTile({ polaroid: p }: { polaroid: PolaroidMetadata }) {
+  return (
+    <Link
+      href={`/a/${p.artworkId}`}
+      className="group block overflow-hidden rounded-xl border border-border bg-background-elevated transition-base hover:border-border-strong"
+    >
+      <div className="relative bg-black/20">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`/captures/${p.polaroid}`}
+          alt={`Polaroid of ${p.artworkId}`}
+          loading="lazy"
+          className="h-auto w-full"
+        />
+        <span
+          className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full border border-border bg-background/80 px-2 py-1 text-[9px] tracking-[0.2em] uppercase text-foreground-subtle opacity-0 backdrop-blur transition-base group-hover:opacity-100"
+          aria-hidden
+        >
+          ◐ Six moods
+        </span>
+      </div>
+      <div className="p-3">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-foreground-subtle">
+          {p.system} · {p.palette}
+        </p>
+        <p className="mt-1 text-sm text-foreground group-hover:text-aurora-cyan">
+          {p.artworkId}
+        </p>
+        <p className="mt-1 font-mono text-[10px] text-foreground-subtle">
+          {new Date(p.capturedAt).toLocaleString()} · {p.artworkHash.slice(0, 8)}
+        </p>
+      </div>
+    </Link>
   );
 }
