@@ -6,7 +6,7 @@ A workspace by **Kai Djuric** (`kai@longhorizon.com`). See `AGENTS.md` for AI co
 
 ## Status
 
-**88/88 tests pass.** Build clean. 5 living systems, 10 seed artworks. See `STAGES.md` for the full build plan and `STAGES.md` for the 30-step Long Horizon roadmap.
+**253/253 tests pass.** Build clean. 8 living systems, 28 seed artworks, 3 collections, 5 new public routes. See `STAGES.md` for the full build plan and the 23/30 Long Horizon roadmap.
 
 ### Living systems shipped
 
@@ -44,10 +44,21 @@ npm run dev               # → http://localhost:3000
 | `/create` | Artwork index — pick a seed or upload an audio file |
 | `/engine/[id]` | Interactive engine — full UI, parameter panel, recording |
 | `/a/[id]` | Shareable artwork page — embeddable, no chrome |
+| `/gallery` | Public gallery grid of all artworks with filters |
+| `/explore` | Search + DNA-similarity "more like this" discovery |
+| `/collections` | Index of curated artwork collections |
+| `/c/[slug]` | Single collection page (ordered artwork grid) |
+| `/polaroids` | Polaroid Wall — every captured polaroid across the gallery |
+| `/feed.xml` | Atom 1.0 feed of new artworks |
 | `/api/audio/dna` | POST — extract AudioDNA from uploaded audio |
 | `/api/planetary/dna` | POST — extract PlanetaryDNA for a date+location |
+| `/api/visual/dna` | POST — extract VisualDNA from uploaded image |
+| `/api/visual/create` | POST — create an Artwork from VisualDNA |
 | `/api/artworks/[id]/polaroid` | POST — upload polaroid PNG |
 | `/api/artworks/[id]/video` | POST — upload WebM recording |
+| `/api/comments` | POST/GET — comments on shareable pages |
+| `/api/reactions` | POST/GET — toggle heart reactions |
+| `/api/search` | GET — lightweight JSON search |
 
 ## Reproducibility contract
 
