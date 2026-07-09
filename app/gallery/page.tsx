@@ -36,6 +36,9 @@ const SYSTEM_LABELS: Record<LivingSystemName, string> = {
   sandTraveler: "Sand",
   deJongAttractor: "de Jong",
   birthChart: "Wheel",
+  reactionDiffusion: "Reaction",
+  lorenzAttractor: "Lorenz",
+  physarum: "Slime Mold",
 };
 
 const SYSTEM_DESCRIPTIONS: Record<LivingSystemName, string> = {
@@ -44,6 +47,9 @@ const SYSTEM_DESCRIPTIONS: Record<LivingSystemName, string> = {
   sandTraveler: "Tarbell 2004",
   deJongAttractor: "Tarbell 2004",
   birthChart: "Placidus + 5 aspects",
+  reactionDiffusion: "Gray-Scott Turing patterns",
+  lorenzAttractor: "Lorenz 1963 strange attractor",
+  physarum: "Agent-based slime mold self-organization",
 };
 
 const SOURCE_DESCRIPTIONS: Record<Source, string> = {

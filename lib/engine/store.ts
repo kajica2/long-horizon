@@ -188,6 +188,30 @@ export const useEngineStore = create<EngineState>((set) => ({
       set((s) => ({
         shaderGraph: { ...s.shaderGraph, params: { ...s.shaderGraph.params, ...defs } },
       }));
+    } else if (system === "reactionDiffusion") {
+      const defs = {
+        feedRate: 0.0367, killRate: 0.0649, du: 1.0, dv: 0.5,
+        dt: 1.0, stepsPerFrame: 5,
+      };
+      set((s) => ({
+        shaderGraph: { ...s.shaderGraph, params: { ...s.shaderGraph.params, ...defs } },
+      }));
+    } else if (system === "lorenzAttractor") {
+      const defs = {
+        sigma: 10.0, rho: 28.0, beta: 8.0 / 3.0, dt: 0.005,
+        trailLength: 8000, lineWidth: 1.2, fadeTail: 0.85,
+      };
+      set((s) => ({
+        shaderGraph: { ...s.shaderGraph, params: { ...s.shaderGraph.params, ...defs } },
+      }));
+    } else if (system === "physarum") {
+      const defs = {
+        numAgents: 65536, sensorAngle: 22.5, sensorDistance: 9.0,
+        stepSize: 1.0, turnRate: 45.0, decay: 0.92, diffuse: 0.5,
+      };
+      set((s) => ({
+        shaderGraph: { ...s.shaderGraph, params: { ...s.shaderGraph.params, ...defs } },
+      }));
     }
   },
   setPlanetaryModulation: (intensity, moonPhase) =>

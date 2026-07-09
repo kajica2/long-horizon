@@ -18,6 +18,9 @@ import { CosmicFilaments } from "./CosmicFilaments";
 import { SandTraveler } from "./SandTraveler";
 import { DeJongAttractor } from "./DeJongAttractor";
 import { BirthChartScene } from "./BirthChartScene";
+import { ReactionDiffusion } from "./ReactionDiffusion";
+import { LorenzAttractor } from "./LorenzAttractor";
+import { Physarum } from "./Physarum";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { PostFX } from "./PostFX";
 import { useEngineStore } from "@/lib/engine/store";
@@ -81,6 +84,12 @@ export function ShareableViewer({
           <DeJongAttractor seed={seed} />
         ) : system === "birthChart" ? (
           birthChart ? <BirthChartScene chart={birthChart} seed={seed} /> : null
+        ) : system === "reactionDiffusion" ? (
+          <ReactionDiffusion seed={seed} />
+        ) : system === "lorenzAttractor" ? (
+          <LorenzAttractor seed={seed} />
+        ) : system === "physarum" ? (
+          <Physarum seed={seed} />
         ) : (
           <ParticleSystem seed={seed} />
         )}

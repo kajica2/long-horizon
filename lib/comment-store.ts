@@ -30,7 +30,7 @@ export async function listComments(artworkId: string): Promise<CommentRecord[]> 
     where: { artworkId },
     orderBy: { createdAt: "asc" },
   });
-  return rows.map((r) => ({
+  return rows.map((r: { id: string; artworkId: string; body: string; author: string; createdAt: Date }) => ({
     id: r.id,
     artworkId: r.artworkId,
     body: r.body,

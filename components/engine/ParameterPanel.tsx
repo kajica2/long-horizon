@@ -49,6 +49,15 @@ function defaultParamsFor(system: LivingSystemName): Record<string, number> {
   if (system === "cosmicFilaments") {
     return { particleCount: 30000, noiseScale: 0.5, fieldStrength: 1.4, drag: 0.05, spawnRadius: 7, pointSize: 1.2 };
   }
+  if (system === "reactionDiffusion") {
+    return { feedRate: 0.0367, killRate: 0.0649, du: 1.0, dv: 0.5, dt: 1.0, stepsPerFrame: 5 };
+  }
+  if (system === "lorenzAttractor") {
+    return { sigma: 10.0, rho: 28.0, beta: 8.0 / 3.0, dt: 0.005, trailLength: 8000, lineWidth: 1.2, fadeTail: 0.85 };
+  }
+  if (system === "physarum") {
+    return { numAgents: 65536, sensorAngle: 22.5, sensorDistance: 9.0, stepSize: 1.0, turnRate: 45.0, decay: 0.92, diffuse: 0.5 };
+  }
   return {};
 }
 
@@ -88,6 +97,9 @@ export function ParameterPanel() {
   const allParamKeys = Object.keys(shaderGraph.params);
 
   // For sandTraveler / deJong / birthChart, show minimal panel
+  // (the new systems RD/LZ/PM have audioBindings + many params, but their
+  // paramSpec isn't wired yet — they fall through to the System accordion
+  // for palette + postfx and the Camera accordion for framing)
   const isMinimal = ["sandTraveler", "deJongAttractor", "birthChart"].includes(shaderGraph.system);
 
   if (collapsed) {
@@ -125,6 +137,9 @@ export function ParameterPanel() {
              shaderGraph.system === "cosmicFilaments" ? "Cosmic Filaments" :
              shaderGraph.system === "sandTraveler" ? "Sand Traveler" :
              shaderGraph.system === "deJongAttractor" ? "de Jong" :
+             shaderGraph.system === "reactionDiffusion" ? "Reaction-Diffusion" :
+             shaderGraph.system === "lorenzAttractor" ? "Lorenz Attractor" :
+             shaderGraph.system === "physarum" ? "Slime Mold" :
              "Birth Chart"}
           </p>
         </div>

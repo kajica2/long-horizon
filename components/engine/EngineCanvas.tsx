@@ -7,6 +7,9 @@ import { CosmicFilaments } from "./CosmicFilaments";
 import { SandTraveler } from "./SandTraveler";
 import { DeJongAttractor } from "./DeJongAttractor";
 import { BirthChartScene } from "./BirthChartScene";
+import { ReactionDiffusion } from "./ReactionDiffusion";
+import { LorenzAttractor } from "./LorenzAttractor";
+import { Physarum } from "./Physarum";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { CameraRig } from "./CameraRig";
 import { PostFX } from "./PostFX";
@@ -23,6 +26,9 @@ import type { DeviceTier } from "@/lib/engine/responsive";
  *   - "sandTraveler"        → SandTraveler (Tarbell port, 2D canvas)
  *   - "deJongAttractor"     → DeJongAttractor (Tarbell port, 2D canvas)
  *   - "birthChart"          → BirthChartScene (3D natal chart)
+ *   - "reactionDiffusion"   → ReactionDiffusion (Gray-Scott Turing patterns)
+ *   - "lorenzAttractor"     → LorenzAttractor (3D strange attractor)
+ *   - "physarum"            → Physarum (agent-based slime mold)
  */
 export function EngineCanvas({
   seed,
@@ -73,6 +79,12 @@ export function EngineCanvas({
           birthChart ? (
             <BirthChartScene chart={birthChart} seed={seed} />
           ) : null
+        ) : system === "reactionDiffusion" ? (
+          <ReactionDiffusion seed={seed} />
+        ) : system === "lorenzAttractor" ? (
+          <LorenzAttractor seed={seed} />
+        ) : system === "physarum" ? (
+          <Physarum seed={seed} deviceTier={deviceTier} />
         ) : (
           <ParticleSystem seed={seed} deviceTier={deviceTier} />
         )}

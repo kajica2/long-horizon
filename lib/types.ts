@@ -106,7 +106,10 @@ export type LivingSystemName =
   | "cosmicFilaments"
   | "sandTraveler"
   | "deJongAttractor"
-  | "birthChart";
+  | "birthChart"
+  | "reactionDiffusion"
+  | "lorenzAttractor"
+  | "physarum";
 
 // ============================================================
 // PlanetaryDNA — genome derived from real-time planetary positions

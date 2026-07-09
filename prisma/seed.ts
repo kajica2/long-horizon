@@ -159,6 +159,137 @@ const DEMOS: DemoSeed[] = [
 ];
 
 // ============================================================
+// Forward declarations for helper functions used by main()
+// (defined later in the file, but TS strict hoisting wants them visible).
+// ============================================================
+
+async function seedStage16To18Artworks(): Promise<void> {
+  await prisma.artwork.deleteMany({
+    where: {
+      id: {
+        in: [
+          "rd-mitosis",
+          "rd-stripes",
+          "lorenz-butterfly",
+          "lorenz-figure-eight",
+          "physarum-network",
+        ],
+      },
+    },
+  });
+
+  const stage1618Seeds: Array<{
+    id: string;
+    title: string;
+    system: ShaderGraph["system"];
+    palette: ShaderGraph["palette"];
+    camera: ShaderGraph["camera"];
+    params: Record<string, number>;
+  }> = [
+    {
+      id: "rd-mitosis",
+      title: "Mitosis",
+      system: "reactionDiffusion",
+      palette: "ember",
+      camera: "drone",
+      params: {
+        feedRate: 0.0367,
+        killRate: 0.0649,
+        du: 1.0,
+        dv: 0.5,
+        dt: 1.0,
+        stepsPerFrame: 5,
+      },
+    },
+    {
+      id: "rd-stripes",
+      title: "Stripes",
+      system: "reactionDiffusion",
+      palette: "tide",
+      camera: "drone",
+      params: {
+        feedRate: 0.022,
+        killRate: 0.051,
+        du: 1.0,
+        dv: 0.5,
+        dt: 1.0,
+        stepsPerFrame: 5,
+      },
+    },
+    {
+      id: "lorenz-butterfly",
+      title: "Lorenz Butterfly",
+      system: "lorenzAttractor",
+      palette: "ember",
+      camera: "drone",
+      params: {
+        sigma: 10.0,
+        rho: 28.0,
+        beta: 8.0 / 3.0,
+        dt: 0.005,
+        trailLength: 8000,
+        lineWidth: 1.2,
+        fadeTail: 0.85,
+      },
+    },
+    {
+      id: "lorenz-figure-eight",
+      title: "Lorenz Figure-Eight",
+      system: "lorenzAttractor",
+      palette: "aurora",
+      camera: "orbit",
+      params: {
+        sigma: 10.0,
+        rho: 28.0,
+        beta: 8.0 / 3.0,
+        dt: 0.005,
+        trailLength: 6000,
+        lineWidth: 1.6,
+        fadeTail: 0.75,
+      },
+    },
+    {
+      id: "physarum-network",
+      title: "Slime Mold Network",
+      system: "physarum",
+      palette: "moss",
+      camera: "drone",
+      params: {
+        numAgents: 65536,
+        sensorAngle: 22.5,
+        sensorDistance: 9.0,
+        stepSize: 1.0,
+        turnRate: 45.0,
+        decay: 0.92,
+        diffuse: 0.5,
+      },
+    },
+  ];
+
+  for (const s of stage1618Seeds) {
+    const shaderGraph: ShaderGraph = {
+      ...defaultShaderGraph(),
+      system: s.system,
+      palette: s.palette,
+      camera: s.camera,
+      params: { ...defaultShaderGraph().params, ...s.params },
+    };
+    const artwork: Artwork = {
+      id: s.id,
+      seed: hashSeedForDemo(s.id),
+      soundtrack: emptySoundtrack(),
+      audioDNA: zeroAudioDNA(),
+      shaderGraph,
+      createdAt: new Date().toISOString(),
+      creator: "stage1618-seed",
+      title: s.title,
+    };
+    await saveArtwork(artwork);
+    console.log(`  ${s.id} — ${s.title} (${s.system})`);
+  }
+}
+
+// ============================================================
 // Seed runner
 // ============================================================
 
@@ -306,6 +437,8 @@ async function main() {
   console.log(`\nFinal: ${finalCount} artwork(s) in database.`);
   void finalCount;
   await seedSandTravelerArtworks();
+  await seedDeJongAttractorArtworks();
+  await seedStage16To18Artworks();
 }
 
 async function seedSandTravelerArtworks() {
@@ -347,12 +480,14 @@ async function seedSandTravelerArtworks() {
     await saveArtwork(artwork);
     console.log(`  ${sand.id} — ${sand.title}`);
   }
+}
 
-  // ============================================================
-  // Peter de Jong attractor artworks — Tarbell's 2004 piece.
-  // 4K travelers iterate the de Jong map and accumulate ink.
-  // ============================================================
+// ============================================================
+// Peter de Jong attractor artworks — Tarbell's 2004 piece.
+// 4K travelers iterate the de Jong map and accumulate ink.
+// ============================================================
 
+async function seedDeJongAttractorArtworks() {
   await prisma.artwork.deleteMany({
     where: { id: { startsWith: "dejong-" } },
   });
