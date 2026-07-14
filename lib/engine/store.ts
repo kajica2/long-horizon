@@ -48,6 +48,13 @@ export type EngineState = {
   resetParams: (group: "physics" | "visual" | "audio" | "all") => void;
   setPlanetaryModulation: (intensity: number, moonPhase: number) => void;
   setLiveMode: (on: boolean) => void;
+
+  // Observability (engine HUD).
+  fps: number;
+  frameTimeMs: number;
+  particlesRendered: number;
+  drawCalls: number;
+  setObservability: (s: { fps: number; frameTimeMs: number; particlesRendered?: number; drawCalls?: number }) => void;
 };
 
 export const useEngineStore = create<EngineState>((set) => ({
@@ -91,6 +98,10 @@ export const useEngineStore = create<EngineState>((set) => ({
   visualBaselineParams: null,
   visualDeltaMagnitudes: null,
   liveMode: false,
+  fps: 0,
+  frameTimeMs: 0,
+  particlesRendered: 0,
+  drawCalls: 0,
 
   setPaused: (paused) => set({ paused }),
   togglePaused: () => set((s) => ({ paused: !s.paused })),
@@ -217,4 +228,11 @@ export const useEngineStore = create<EngineState>((set) => ({
   setPlanetaryModulation: (intensity, moonPhase) =>
     set({ planetaryChartIntensity: intensity, planetaryMoonPhase: moonPhase }),
   setLiveMode: (liveMode) => set({ liveMode }),
+  setObservability: (s) =>
+    set((prev) => ({
+      fps: s.fps,
+      frameTimeMs: s.frameTimeMs,
+      particlesRendered: s.particlesRendered ?? prev.particlesRendered,
+      drawCalls: s.drawCalls ?? prev.drawCalls,
+    })),
 }));

@@ -27,6 +27,7 @@
 
 import { useState, useMemo } from "react";
 import { useEngineStore } from "@/lib/engine/store";
+import { PRESETS, applyPreset, type Preset } from "@/lib/engine/presets";
 import {
   FLOW_FIELD_MEDITATION,
   type ParamSpec,
@@ -288,6 +289,9 @@ export function ParameterPanel() {
       {/* Visual DNA accordion — only shown when the artwork carries one (action 13) */}
       <VisualDNAGroup />
 
+      {/* Presets accordion — quick-load starting points */}
+      <PresetsGroup />
+
       {/* Reset all */}
       {!isMinimal && (
         <button
@@ -525,3 +529,59 @@ function DnaBar({ label, v }: { label: string; v: number }) {
     </div>
   );
 }
+/**
+ * PresetsGroup — quick-load starting points.
+ * One-click load of named parameter sets (Tarbell 2004, Soft Machine, etc).
+ * Replaces the engine's params + camera + palette; user can then tweak.
+ */
+function PresetsGroup() {
+  const shaderGraph = useEngineStore((s) => s.shaderGraph);
+  const setShaderGraph = useEngineStore((s) => s.setShaderGraph);
+  const setCameraMode = useEngineStore((s) => s.setCameraMode);
+  const setPalette = useEngineStore((s) => s.setPalette);
+  const [open, setOpen] = useState(false);
+
+  function load(preset: Preset) {
+    const next = applyPreset(shaderGraph, preset);
+    setShaderGraph(next);
+    if (preset.camera) setCameraMode(preset.camera);
+    if (preset.palette) setPalette(preset.palette);
+  }
+
+  return (
+    <details
+      className="mt-2 group"
+      open={open}
+      onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
+    >
+      <summary className="cursor-pointer list-none flex items-center justify-between gap-2 rounded-md border border-border bg-background-glass px-3 py-2 text-[10px] tracking-[0.2em] uppercase text-foreground-muted transition-base hover:border-border-strong hover:text-foreground">
+        <span>Presets</span>
+        <span className="text-foreground-subtle group-open:rotate-90 transition-base">▸</span>
+      </summary>
+      <div className="mt-2 space-y-1.5">
+        {PRESETS.map((p) => {
+          const active = shaderGraph.system === p.system;
+          return (
+            <button
+              key={p.id}
+              onClick={() => load(p)}
+              className={
+                "w-full rounded-md border px-3 py-2 text-left transition-base " +
+                (active
+                  ? "border-aurora-cyan/40 bg-aurora-cyan/5"
+                  : "border-border bg-background-glass hover:border-border-strong")
+              }
+              title={p.description}
+            >
+              <p className="text-[11px] font-medium text-foreground">{p.name}</p>
+              <p className="mt-0.5 text-[10px] leading-snug text-foreground-subtle">
+                {p.description}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
