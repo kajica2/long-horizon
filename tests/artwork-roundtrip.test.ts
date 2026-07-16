@@ -14,7 +14,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 // Use a dedicated test database
-process.env.DATABASE_URL = "file:./prisma/test.db";
+process.env.DATABASE_URL = "file:./test.db";
 
 import {
   saveArtwork,

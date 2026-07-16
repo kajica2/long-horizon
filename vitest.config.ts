@@ -19,7 +19,7 @@ export default defineConfig({
     // Default the DATABASE_URL so DB-touching tests work without an env
     // prefix. Override via real env var or .env if you need a different DB.
     env: {
-      DATABASE_URL: "file:./prisma/dev.db",
+      DATABASE_URL: "file:./dev.db",
     },
   },
   resolve: {
