@@ -22,7 +22,7 @@
  *   - reactionDiffusion runs the Gray-Scott step on the CPU per frame,
  *     so it's the most realistic on this runner.
  *
- * Run:  DATABASE_URL="file:./prisma/dev.db" npx tsx scripts/perf-baseline.ts
+ * Run:  DATABASE_URL="file:./dev.db" npx tsx scripts/perf-baseline.ts
  */
 
 import { chromium, type Page, type Browser } from "playwright";
@@ -111,7 +111,7 @@ async function startDevServer(): Promise<ChildProcess> {
   const env = {
     ...process.env,
     PORT: String(PORT),
-    DATABASE_URL: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
+    DATABASE_URL: process.env.DATABASE_URL ?? "file:./dev.db",
   };
   // Use `next dev` directly (no npm wrapper) so the child process can stream
   // stdout/stderr without buffering — npm piping is known to wedge when the
